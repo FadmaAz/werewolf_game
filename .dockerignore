@@ -1,0 +1,9 @@
+target/
+data/
+.git/
+.gitignore
+*.md
+Dockerfile
+.dockerignore
+.idea/
+.vscode/
