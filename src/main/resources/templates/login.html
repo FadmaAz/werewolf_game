@@ -1,0 +1,299 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>Connexion - Loup-Garou</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.7.1/dist/dotlottie-wc.js" type="module"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1432 50%, #0e1828 100%);
+            min-height: 100vh;
+            background-image:
+                    linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)),
+                    url('/images/forest.jpg');
+            background-size: cover;
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            position: relative;
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .animation-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .brand-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            margin: 0 auto 1rem;
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.5);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .brand-title {
+            font-family: 'Creepster', cursive;
+            font-size: 2.5rem;
+            color: #ef4444;
+            text-shadow: 0 0 30px rgba(220, 38, 38, 0.8),
+            0 0 60px rgba(220, 38, 38, 0.5),
+            0 4px 20px rgba(0, 0, 0, 0.5);
+            animation: pulse 3s ease-in-out infinite;
+            letter-spacing: 0.05em;
+            margin: 0;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                text-shadow: 0 0 30px rgba(220, 38, 38, 0.8),
+                0 0 60px rgba(220, 38, 38, 0.5),
+                0 4px 20px rgba(0, 0, 0, 0.5);
+            }
+            50% {
+                text-shadow: 0 0 40px rgba(220, 38, 38, 1),
+                0 0 80px rgba(220, 38, 38, 0.7),
+                0 4px 20px rgba(0, 0, 0, 0.5);
+            }
+        }
+
+        .card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+            0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            animation: floatCard 4s ease-in-out infinite;
+        }
+
+        @keyframes floatCard {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .form-control {
+            background-color: rgba(10, 14, 39, 0.6);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: #ffffff;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            background-color: rgba(10, 14, 39, 0.8);
+            border-color: #dc2626;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.25rem rgba(220, 38, 38, 0.25);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-label {
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border: none;
+            font-weight: 700;
+            padding: 0.875rem;
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.4),
+            0 0 40px rgba(220, 38, 38, 0.2);
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn-login:hover::before {
+            left: 100%;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 12px 40px rgba(220, 38, 38, 0.6),
+            0 0 60px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .alert-danger {
+            background: rgba(220, 38, 38, 0.2);
+            border-left: 4px solid #dc2626;
+            color: #fca5a5;
+        }
+
+        .link-custom {
+            color: #dc2626;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .link-custom:hover {
+            color: #fca5a5;
+            text-decoration: underline;
+        }
+
+        .text-muted {
+            color: #ffffff !important;
+        }
+
+        @media (max-width: 768px) {
+            .brand-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <!-- Brand Header -->
+    <div class="brand-header">
+        <div class="brand-icon">🐺</div>
+        <h1 class="brand-title">Connexion</h1>
+    </div>
+
+    <!-- Error Alert -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${error}">Error message</span>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Login Form -->
+    <div class="card">
+        <div class="card-body p-4">
+            <form method="post" th:action="@{/login}">
+                <div class="mb-3">
+                    <label class="form-label">
+                        <i class="bi bi-person me-2"></i>Nom d'utilisateur
+                    </label>
+                    <input
+                            type="text"
+                            name="username"
+                            class="form-control form-control-lg"
+                            placeholder="Entrez votre username"
+                            required
+                            minlength="3"
+                            autofocus/>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">
+                        <i class="bi bi-lock me-2"></i>Mot de passe
+                    </label>
+                    <input
+                            type="password"
+                            name="password"
+                            class="form-control form-control-lg"
+                            placeholder="Entrez votre mot de passe"
+                            required
+                            minlength="4"/>
+                </div>
+
+                <button class="btn btn-primary btn-login w-100 mb-3" type="submit">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
+                </button>
+            </form>
+
+            <hr class="my-4" style="border-color: rgba(220, 38, 38, 0.3);"/>
+
+            <div class="text-center">
+                <p class="text-muted mb-2">
+                    Pas encore de compte ?
+                </p>
+                <a class="link-custom" th:href="@{/signup}">
+                    <i class="bi bi-person-plus me-2"></i>Créer un compte
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Home -->
+    <div class="text-center mt-4">
+        <a class="link-custom" th:href="@{/}">
+            <i class="bi bi-arrow-left me-2"></i>Retour à l'accueil
+        </a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Auto-dismiss alerts
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 5000);
+</script>
+</body>
+</html>

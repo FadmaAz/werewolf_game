@@ -1,0 +1,340 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>Jouer - Loup-Garou</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+             background: linear-gradient(135deg, rgba(10, 14, 39, 0.70) 0%, rgba(30, 27, 75, 0.70) 100%),
+                        url('/images/image1.jpg');
+        background-size: cover;
+            min-height: 100vh;
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .navbar-custom {
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(220, 38, 38, 0.3);
+            margin-bottom: 2rem;
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid #dc2626;
+            object-fit: cover;
+        }
+
+        .card {
+            background: rgba(26, 31, 58, 0.85);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(220, 38, 38, 0.3);
+        }
+
+        .card-header {
+            background: rgba(220, 38, 38, 0.1);
+            border-bottom: 1px solid rgba(220, 38, 38, 0.3);
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: #f1f5f9;
+        }
+
+        .form-control {
+            background-color: rgba(10, 14, 39, 0.6);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: #f1f5f9;
+            padding: 0.75rem 1rem;
+        }
+
+        .form-control:focus {
+            background-color: rgba(10, 14, 39, 0.8);
+            border-color: #dc2626;
+            color: #f1f5f9;
+            box-shadow: 0 0 0 0.25rem rgba(220, 38, 38, 0.25);
+        }
+
+        .form-control::placeholder {
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .form-label {
+            color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+            border: none;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(124, 58, 237, 0.5);
+        }
+
+        .btn-join {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border: none;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-join:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(220, 38, 38, 0.5);
+        }
+
+        .btn-secondary-custom {
+            background: rgba(124, 58, 237, 0.2);
+            border: 1px solid #7c3aed;
+            color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        .btn-secondary-custom:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+            color: #f1f5f9;
+        }
+
+        .alert-danger {
+            background: rgba(220, 38, 38, 0.2);
+            border-left: 4px solid #dc2626;
+            color: #fca5a5;
+            border-radius: 10px;
+        }
+
+        .link-custom {
+            color: #dc2626;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .link-custom:hover {
+            color: #fca5a5;
+        }
+
+        .icon-lg {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .last-room-box {
+            background: rgba(10, 14, 39, 0.4);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .code-badge {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: 3px;
+            display: inline-block;
+        }
+
+        /* Creepster font styling for main title */
+        .page-title {
+            font-family: 'Creepster', cursive;
+            font-size: 3rem;
+            color: #dc2626;
+            text-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
+        }
+
+        .text-muted {
+            color: #cbd5e1 !important;
+        }
+
+        .card-body p.text-muted {
+            color: #94a3b8 !important;
+        }
+
+        .last-room-box small.text-muted {
+            color: #94a3b8 !important;
+        }
+
+        .badge {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<!-- Top Navigation -->
+<nav class="navbar-custom">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center w-100">
+            <a class="link-custom fs-5" th:href="@{/}">
+                <i class="bi bi-arrow-left me-2"></i>Accueil
+            </a>
+            <div class="d-flex align-items-center gap-3" th:if="${me != null}">
+                <img class="avatar" th:src="@{|/avatars/${me.avatar}|}" alt="avatar"/>
+                <div>
+                    <div class="fw-bold" th:text="${me.username}">Username</div>
+                    <form method="post" th:action="@{/logout}" class="d-inline">
+                        <button class="btn btn-link text-danger p-0" style="font-size: 0.875rem;" type="submit">
+                            Déconnexion
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- Page Title -->
+    <div class="text-center mb-5">
+        <h1 class="page-title">
+            <i class="bi bi-controller me-3"></i>Jouer
+        </h1>
+        <p class="lead text-muted">Créez une room ou rejoignez vos amis</p>
+    </div>
+
+    <!-- Error Alert -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${error}">Error message</span>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Action Cards -->
+    <div class="row g-4">
+        <!-- Create Room Card -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header text-center">
+                    <i class="bi bi-plus-circle-fill text-warning icon-lg d-block"></i>
+                    Créer une Room
+                </div>
+                <div class="card-body text-center d-flex flex-column">
+                    <p class="text-muted mb-4 flex-grow-1">
+                        Vous serez l'administrateur de la partie. Une clé unique sera générée automatiquement pour inviter vos amis.
+                    </p>
+                    <form method="post" th:action="@{/room/create}">
+                        <button class="btn btn-primary btn-create w-100 py-3" type="submit">
+                            <i class="bi bi-plus-lg me-2"></i>Créer une Room
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Join Room Card -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header text-center">
+                    <i class="bi bi-door-open-fill text-danger icon-lg d-block"></i>
+                    Rejoindre une Room
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted mb-4">
+                        Entrez la clé de 6 caractères fournie par l'administrateur de la partie.
+                    </p>
+                    <form method="post" th:action="@{/room/join}" class="flex-grow-1 d-flex flex-column">
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-key-fill me-2"></i>Code de la Room
+                            </label>
+                            <input
+                                    type="text"
+                                    name="code"
+                                    class="form-control form-control-lg text-center"
+                                    placeholder="Ex: AB12CD"
+                                    required
+                                    minlength="6"
+                                    maxlength="6"
+                                    style="letter-spacing: 4px; font-weight: 700; font-size: 1.5rem;"/>
+                        </div>
+                        <button class="btn btn-primary btn-join w-100 py-3 mt-auto" type="submit">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Rejoindre
+                        </button>
+                    </form>
+
+                    <!-- Last Room -->
+                    <div th:if="${roomCode != null}" class="last-room-box">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted d-block">Dernière room:</small>
+                                <span class="code-badge" th:text="${roomCode}">AB12CD</span>
+                            </div>
+                            <a class="btn btn-secondary-custom" th:href="@{|/room/${roomCode}|}">
+                                <i class="bi bi-arrow-right-circle me-2"></i>Ouvrir
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="mb-3" style="color: #f1f5f9;">
+                        <i class="bi bi-info-circle text-info me-2"></i>Comment ça marche ?
+                    </h5>
+                    <div class="row text-start">
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <span class="badge bg-danger rounded-circle me-3" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">1</span>
+                                <div>
+                                    <strong style="color: #f1f5f9;">Créez ou rejoignez</strong>
+                                    <p class="text-muted small mb-0">L'admin crée une room et partage le code</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <span class="badge bg-danger rounded-circle me-3" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">2</span>
+                                <div>
+                                    <strong style="color: #f1f5f9;">Attendez les joueurs</strong>
+                                    <p class="text-muted small mb-0">Minimum 5 joueurs pour commencer</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <span class="badge bg-danger rounded-circle me-3" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">3</span>
+                                <div>
+                                    <strong style="color: #f1f5f9;">Lancez la partie</strong>
+                                    <p class="text-muted small mb-0">L'admin démarre quand tout le monde est prêt</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

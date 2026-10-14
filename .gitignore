@@ -1,0 +1,22 @@
+# Target & Build artifacts
+/target/
+*.class
+
+# Database & Runtime Data
+/data/
+*.db
+
+# Logs
+*.log
+/logs/
+
+# IDE files
+.idea/
+*.iml
+.settings/
+.project
+.classpath
+
+# OS generated files
+.DS_Store
+Thumbs.db

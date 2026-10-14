@@ -1,0 +1,941 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:thym="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>Jeu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+  <link rel="preconnect" href="https://api.iconify.design">
+<style id="game-upgrade-styles">
+  /* ===== Gameplay UX upgrade (game.html only) ===== */
+  :root {
+    --glass: rgba(255,255,255,.08);
+    --glass-strong: rgba(255,255,255,.12);
+    --stroke: rgba(255,255,255,.14);
+    --shadow: 0 18px 60px rgba(0,0,0,.35);
+    --shadow-soft: 0 10px 30px rgba(0,0,0,.25);
+    --night-accent: rgba(115, 146, 255, .85);
+    --day-accent: rgba(255, 212, 86, .9);
+  }
+/* -------- Day/Night readability (day = black text, night = white text) -------- */
+body.is-day {
+  --text: #0b1020;
+  --muted: rgba(11,16,32,.68);
+  --border: rgba(0,0,0,.14);
+
+  --glass: rgba(255,255,255,.50);
+  --glass-strong: rgba(255,255,255,.72);
+  --stroke: rgba(0,0,0,.10);
+  --shadow: 0 18px 60px rgba(0,0,0,.20);
+  --shadow-soft: 0 10px 30px rgba(0,0,0,.16);
+}
+body.is-night {
+  --text: #f3f5ff;
+  --muted: rgba(255,255,255,.68);
+  --border: rgba(255,255,255,.12);
+}
+
+/* Panels that were dark in app.css -> make them light during day */
+body.is-day .feed,
+body.is-day .chatBox,
+body.is-day .msg .bubble,
+body.is-day .nightWait,
+body.is-day input,
+body.is-day select,
+body.is-day .pill:not(.green):not(.red) {
+  background: rgba(255,255,255,.72) !important;
+  border-color: rgba(0,0,0,.12) !important;
+  color: var(--text) !important;
+}
+body.is-day input::placeholder { color: rgba(11,16,32,.55) !important; }
+body.is-day .msg .meta { color: var(--muted) !important; }
+
+/* Toasts readable in day mode */
+body.is-day .toast {
+  background: rgba(255,255,255,.82);
+  border-color: rgba(0,0,0,.12);
+  color: var(--text);
+}
+body.is-day .toast.private { background: rgba(234, 242, 255, .90); border-color: rgba(115,146,255,.38); }
+body.is-day .toast.day { background: rgba(255, 247, 223, .92); border-color: rgba(255,212,86,.46); }
+body.is-day .toast .tBody { opacity: .95; }
+
+/* Larger text for readability */
+.feed, .chatBox { font-size: 16px; line-height: 1.35; }
+.msg .bubble { font-size: 15.5px; line-height: 1.35; }
+
+/* Events panel */
+.eventsFeed { font-weight: 500; }
+.pill.tiny { padding: 6px 10px; border-radius: 999px; font-size: 12px; }
+.eventsCard .eventsHeader { align-items: center; justify-content: space-between; }
+.eventsCard .eventsHeader h2 { margin: 0; }
+.eventsCard .eventsHint { margin: 6px 0 10px; }
+
+
+  html, body {
+    height: 100%;
+  }
+
+  body.ww {
+    background: transparent !important;
+    overflow-x: hidden;
+  }
+
+  /* Full-screen container */
+  .container {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 16px 18px 28px !important;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Ambient background layers */
+  #ambientBg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  #ambientBg .bgLayer {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 650ms ease;
+  }
+  body.is-day #bgDay { opacity: 1; }
+  body.is-night #bgNight { opacity: 1; }
+
+  #bgDay {
+    background:
+      radial-gradient(1000px 700px at 25% 0%, rgba(255,255,255,.35), rgba(255,255,255,0) 60%),
+      radial-gradient(900px 600px at 85% 20%, rgba(255,236,168,.35), rgba(255,255,255,0) 60%),
+      linear-gradient(180deg, #6ec6ff 0%, #b3e5fc 35%, #e3f2fd 100%);
+  }
+
+  #bgNight {
+    background:
+      radial-gradient(900px 650px at 30% -10%, rgba(120,140,255,.25), rgba(0,0,0,0) 55%),
+      radial-gradient(900px 650px at 70% 0%, rgba(0, 255, 221, .10), rgba(0,0,0,0) 55%),
+      linear-gradient(180deg, #070B1F 0%, #0A1240 55%, #0B163D 100%);
+  }
+
+  .bgSun, .bgMoon {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    filter: drop-shadow(0 12px 26px rgba(0,0,0,.35));
+    opacity: .95;
+    animation: floaty 6s ease-in-out infinite;
+  }
+  .bgSun { top: 52px; left: 48px; }
+  .bgMoon { top: 52px; right: 56px; width: 120px; height: 120px; animation-duration: 7.5s; }
+
+  @keyframes floaty {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Stars (night) */
+  #bgNight .stars {
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,.95) 45%, rgba(255,255,255,0) 55%),
+      radial-gradient(1.5px 1.5px at 22% 74%, rgba(255,255,255,.7) 45%, rgba(255,255,255,0) 55%),
+      radial-gradient(1px 1px at 35% 45%, rgba(255,255,255,.85) 45%, rgba(255,255,255,0) 55%),
+      radial-gradient(1.5px 1.5px at 58% 24%, rgba(255,255,255,.8) 45%, rgba(255,255,255,0) 55%),
+      radial-gradient(2px 2px at 78% 54%, rgba(255,255,255,.9) 45%, rgba(255,255,255,0) 55%),
+      radial-gradient(1px 1px at 90% 14%, rgba(255,255,255,.65) 45%, rgba(255,255,255,0) 55%),
+      radial-gradient(1.5px 1.5px at 88% 82%, rgba(255,255,255,.8) 45%, rgba(255,255,255,0) 55%);
+    animation: twinkle 2.8s ease-in-out infinite;
+    opacity: .85;
+  }
+  @keyframes twinkle {
+    0%,100% { opacity: .65; filter: blur(0px); }
+    50% { opacity: 1; filter: blur(.3px); }
+  }
+
+  /* Birds (day) */
+  #bgDay .bird {
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    opacity: .65;
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,.25));
+    animation: flyAcross 16s linear infinite;
+  }
+  #bgDay .bird.b1 { top: 18%; left: -60px; animation-delay: 0s; }
+  #bgDay .bird.b2 { top: 28%; left: -80px; animation-delay: 5s; transform: scale(.9); }
+  #bgDay .bird.b3 { top: 14%; left: -90px; animation-delay: 9s; transform: scale(1.05); }
+  @keyframes flyAcross {
+    from { transform: translateX(0) scale(1); }
+    to { transform: translateX(calc(100vw + 160px)) scale(1); }
+  }
+
+  /* Cards polish */
+  .card {
+    background: var(--glass) !important;
+    border: 1px solid var(--stroke) !important;
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-soft);
+    animation: fadeInUp .28s ease both;
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,0));
+    padding-top: 8px;
+    padding-bottom: 10px;
+    backdrop-filter: blur(8px);
+  }
+  .pill {
+    background: rgba(0,0,0,.18) !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+  }
+
+  /* Role showcase */
+  .roleShowcase {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 14px;
+    align-items: center;
+  }
+  .roleShowcase .roleArt {
+    width: 110px; height: 110px;
+    border-radius: 18px;
+    background: rgba(0,0,0,.18);
+    border: 1px solid rgba(255,255,255,.12);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+  }
+  .roleShowcase img {
+    width: 78px; height: 78px;
+    animation: roleBob 4.5s ease-in-out infinite;
+  }
+  @keyframes roleBob {
+    0%,100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-6px) rotate(-2deg); }
+  }
+  .roleShowcase .kicker {
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    opacity: .8;
+  }
+  .roleShowcase .roleName {
+    font-size: 22px;
+    font-weight: 800;
+    margin-top: 2px;
+  }
+  .roleShowcase .roleDesc {
+    margin-top: 6px;
+    opacity: .9;
+    line-height: 1.35;
+  }
+
+  /* Toasts */
+  #toastStack {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: grid;
+    gap: 10px;
+    width: min(820px, calc(100vw - 28px));
+    pointer-events: none;
+  }
+  .toast {
+    pointer-events: none;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.18);
+    background: rgba(0,0,0,.38);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    animation: toastIn .22s ease both;
+  }
+  .toast .tIcon {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    opacity: .95;
+    filter: drop-shadow(0 8px 14px rgba(0,0,0,.25));
+  }
+  .toast .tTitle {
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .toast .tBody {
+    opacity: .92;
+    margin-top: 3px;
+    line-height: 1.25;
+  }
+  .toast.private {
+    border-color: rgba(115,146,255,.32);
+    background: rgba(26, 38, 90, .42);
+  }
+  .toast.public {
+    border-color: rgba(255,255,255,.20);
+  }
+  .toast.day {
+    border-color: rgba(255,212,86,.32);
+    background: rgba(88, 60, 10, .35);
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes toastOut {
+    to { opacity: 0; transform: translateY(-8px); }
+  }
+
+  /* Chat sidebar (desktop) */
+  @media (min-width: 1100px) {
+    body.hasChatSidebar .container {
+      padding-right: 420px !important;
+    }
+    #chatSidebar {
+      position: fixed;
+      top: 76px;
+      right: 16px;
+      bottom: 16px;
+      width: 388px;
+      z-index: 6;
+    }
+    #chatSidebar .card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    #chatSidebar .chatBox {
+      flex: 1;
+      min-height: 0;
+    }
+    #chatSidebar .row.mt {
+      margin-top: 10px !important;
+    }
+  }
+/* Events sidebar (desktop) — mirrors chat sidebar on the left */
+@media (min-width: 1100px) {
+  body.hasEventsSidebar .container {
+    padding-left: 420px !important;
+  }
+  #eventsSidebar {
+    position: fixed;
+    top: 76px;
+    left: 16px;
+    bottom: 16px;
+    width: 388px;
+    z-index: 6;
+  }
+  #eventsSidebar .card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  #eventsSidebar .feed {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
+}
+
+
+  /* Small UX touches */
+  .btn {
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .btn:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+  }
+  .btn:active {
+    transform: translateY(0);
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    #ambientBg .bgLayer, .toast, .card, .bgSun, .bgMoon, #bgNight .stars, #bgDay .bird, .roleShowcase img {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+</style>
+</head>
+<body class="ww" th:attr="data-phase=${game.phase.name()},data-role=${myGp != null ? myGp.role : ''},data-alive=${myGp != null ? myGp.alive : false}" th:classappend="${#strings.startsWith(game.phase.name(),'NIGHT')} ? ' is-night' : ' is-day'">
+
+    <div id="ambientBg" aria-hidden="true">
+      <div id="bgDay" class="bgLayer"></div>
+      <div id="bgNight" class="bgLayer"></div>
+    </div>
+    <div id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+
+<div class="container">
+    <div class="topbar">
+        <a class="link" th:href="@{|/room/${room.code}|}">← Room</a>
+        <div class="row gap">
+            <span class="pill">Code: <b th:text="${room.code}"></b></span>
+            <span class="pill">Jour: <b th:text="${game.dayNumber}"></b></span>
+            <span class="pill" id="phaseLabel">Phase: <b th:text="${game.phase}"></b></span>
+            <span class="pill" id="timerPill" th:if="${phaseEndsAtMs > 0}">
+        ⏳ <span id="countdown">--</span>
+      </span>
+            <button id="musicToggle" class="btn tiny secondary" type="button">🔊 Musique</button>
+        </div>
+    </div>
+
+    <p class="error" th:if="${error}" th:text="${error}"></p>
+
+    <div class="card">
+        <div class="row gap">
+            <div class="me">
+                <img class="avatar" th:src="@{|/avatars/${me.avatar}|}" alt="avatar"/>
+                <div>
+                    <div><b th:text="${me.username}"></b></div>
+                    <div class="muted">Rôle: <b th:text="${myGp.role}"></b> · <span th:text="${myGp.alive ? 'Vivant' : 'Mort'}"></span></div>
+                </div>
+            </div>
+            <div class="right">
+                <span class="pill red" th:if="${!myGp.alive}">Vous êtes éliminé</span>
+                <span class="pill green" th:if="${myGp.alive}">En jeu</span>
+            </div>
+        </div>
+    
+
+<div class="card roleShowcase" id="roleShowcase" th:if="${myGp != null}">
+    <div class="roleArt">
+        <img id="roleImg" alt="role" src="https://api.iconify.design/mdi:information-outline.svg?color=%23ffffff">
+    </div>
+    <div>
+        <div class="kicker">Votre rôle</div>
+        <div class="roleName" id="roleNameText" th:text="${myGp.role}">ROLE</div>
+        <div class="roleDesc" id="roleDesc"></div>
+    </div>
+</div>
+
+    <div class="card">
+        <h2>Joueurs</h2>
+        <div class="playersGrid">
+            <div class="playerCard" th:each="p : ${players}" th:classappend="${p.alive ? '' : 'dead'}">
+                <img class="avatar big" th:src="@{|/avatars/${p.user.avatar}|}" alt="avatar"/>
+                <div class="name">
+                    <span th:text="${p.user.username}"></span>
+                    <span class="muted" th:if="${!p.alive}"> (mort)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- EVENTS FEED -->
+<div class="card eventsCard">
+    <div class="row gap eventsHeader">
+        <h2>📜 Événements</h2>
+        <span class="pill tiny">🔒 Privé</span>
+    </div>
+    <p class="muted eventsHint">Historique des actions et annonces de la partie.</p>
+    <div id="events" class="feed eventsFeed">Chargement...</div>
+</div>
+
+<!-- NIGHT: WOLVES -->
+    <div class="card" th:if="${game.phase.name() == 'NIGHT_WOLVES'}">
+        <h2>🌙 Nuit — Tour des Loups</h2>
+
+        <div th:if="${myGp.alive and myGp.role.name() == 'WOLF'}">
+            <p class="muted">Choisis une cible. Chaque loup doit choisir une personne différente.</p>
+
+            <form method="post" th:action="@{|/game/${room.code}/wolf-kill|}">
+                <div class="pickGrid">
+                    <label class="pick" th:each="p : ${players}"
+                           th:if="${p.alive and p.role.name() != 'WOLF' and p.id != myGp.id}">
+                        <input type="radio" name="targetId" th:value="${p.id}"
+                               th:checked="${myWolfTarget != null and myWolfTarget == p.id}"
+                               th:disabled="${wolfTakenTargets != null and wolfTakenTargets.contains(p.id)}" required/>
+                        <div class="pickCard">
+                            <img class="avatar big" th:src="@{|/avatars/${p.user.avatar}|}"/>
+                            <div>
+                                <div><b th:text="${p.user.username}"></b></div>
+                                <div class="muted" th:if="${wolfTakenTargets != null and wolfTakenTargets.contains(p.id)}">Déjà choisi par un autre loup</div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <button class="btn" type="submit">✅ Confirmer la victime</button>
+            </form>
+        </div>
+
+        <div th:if="${!(myGp.alive and myGp.role.name() == 'WOLF')}">
+            <div class="nightWait">
+                <p>🌙 C'est la nuit...</p>
+                <p class="muted">Attendez que les loups jouent.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- NIGHT: SEER -->
+    <div class="card" th:if="${game.phase.name() == 'NIGHT_SEER'}">
+        <h2>✨ Nuit — Tour de la Voyante</h2>
+
+        <div th:if="${myGp.alive and myGp.role.name() == 'SEER'}">
+            <p class="muted">Choisis un joueur à inspecter.</p>
+            <form method="post" th:action="@{|/game/${room.code}/seer-check|}">
+                <div class="pickGrid">
+                    <label class="pick" th:each="p : ${players}" th:if="${p.alive and p.id != myGp.id}">
+                        <input type="radio" name="targetId" th:value="${p.id}" required/>
+                        <div class="pickCard">
+                            <img class="avatar big" th:src="@{|/avatars/${p.user.avatar}|}"/>
+                            <div><b th:text="${p.user.username}"></b></div>
+                        </div>
+                    </label>
+                </div>
+                <button class="btn" type="submit">🔮 Voir le rôle</button>
+            </form>
+        </div>
+
+        <div th:if="${!(myGp.alive and myGp.role.name() == 'SEER')}">
+            <div class="nightWait">
+                <p>🌙 C'est la nuit...</p>
+                <p class="muted">Attendez que la voyante joue.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- NIGHT: WITCH -->
+    <div class="card" th:if="${game.phase.name() == 'NIGHT_WITCH'}">
+        <h2>🧙‍♀️ Nuit — Tour de la Sorcière</h2>
+
+        <div th:if="${myGp.alive and myGp.role.name() == 'WITCH'}">
+            <p class="muted">Tu peux (optionnel) soigner une victime des loups et/ou empoisonner quelqu'un. Chaque potion une seule fois.</p>
+
+            <form method="post" th:action="@{|/game/${room.code}/witch-act|}">
+                <div class="grid2">
+                    <div class="subcard">
+                        <h3>🧪 Soin (disponible: <span th:text="${myGp.witchHealAvailable ? 'Oui' : 'Non'}"></span>)</h3>
+                        <p class="muted" th:if="${wolfVictims == null or wolfVictims.size() == 0}">Aucune victime à soigner.</p>
+
+                        <div class="pickGrid">
+                            <label class="pick" th:each="v : ${wolfVictims}">
+                                <input type="radio" name="healTargetId" th:value="${v.id}" th:disabled="${!myGp.witchHealAvailable}"/>
+                                <div class="pickCard">
+                                    <img class="avatar big" th:src="@{|/avatars/${v.user.avatar}|}"/>
+                                    <div><b th:text="${v.user.username}"></b></div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="subcard">
+                        <h3>☠️ Poison (disponible: <span th:text="${myGp.witchPoisonAvailable ? 'Oui' : 'Non'}"></span>)</h3>
+                        <div class="pickGrid">
+                            <label class="pick" th:each="p : ${players}" th:if="${p.alive and p.id != myGp.id}">
+                                <input type="radio" name="poisonTargetId" th:value="${p.id}" th:disabled="${!myGp.witchPoisonAvailable}"/>
+                                <div class="pickCard">
+                                    <img class="avatar big" th:src="@{|/avatars/${p.user.avatar}|}"/>
+                                    <div><b th:text="${p.user.username}"></b></div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn" type="submit">✅ Confirmer</button>
+            </form>
+        </div>
+
+        <div th:if="${!(myGp.alive and myGp.role.name() == 'WITCH')}">
+            <div class="nightWait">
+                <p>🌙 C'est la nuit...</p>
+                <p class="muted">Attendez que la sorcière joue.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- DAY CHAT -->
+    <div class="card chatCard" th:if="${game.phase.name() == 'DAY_CHAT'}">
+        <h2>☀️ Jour — Discussion</h2>
+        <p class="muted">Quand le temps se termine, on passe automatiquement au vote.</p>
+
+        <div id="chat" class="chatBox"></div>
+
+        <div th:if="${myGp.alive}">
+            <form method="post" th:action="@{|/game/${room.code}/chat|}" class="row gap mt">
+                <input name="message" placeholder="Écrire un message..." maxlength="300" class="chatInput"/>
+                <button class="btn" type="submit">Envoyer</button>
+            </form>
+        </div>
+
+        <p class="muted" th:if="${!myGp.alive}">Vous êtes mort: vous ne pouvez plus discuter.</p>
+    </div>
+
+    <!-- DAY VOTE -->
+        <th:block th:if="${game.phase.name() == 'DAY_VOTE'}">
+            <div class="card">
+        <h2>🗳️ Vote</h2>
+<p class="muted">Si le temps se termine et que vous n'avez pas voté, votre vote est perdu.</p>
+
+<div th:if="${myGp.alive}">
+    <form method="post" th:action="@{|/game/${room.code}/vote|}">
+        <div class="pickGrid">
+            <label class="pick" th:each="p : ${players}" th:if="${p.alive and p.id != myGp.id}">
+                <input type="radio" name="targetId" th:value="${p.id}" required/>
+                <div class="pickCard">
+                    <img class="avatar big" th:src="@{|/avatars/${p.user.avatar}|}"/>
+                    <div><b th:text="${p.user.username}"></b></div>
+                </div>
+            </label>
+        </div>
+        <button class="btn" type="submit">Voter</button>
+    </form>
+</div>
+
+<p class="muted" th:if="${!myGp.alive}">Vous êtes mort: vous ne pouvez plus voter.</p>
+            </div>
+
+            <div class="card chatCard">
+                <h2>💬 Chat</h2>
+                <p class="muted">Lecture seule pendant le vote.</p>
+                <div id="chat" class="chatBox"></div>
+            </div>
+        </th:block>
+
+<!-- FINISHED -->
+    <div class="card" th:if="${game.phase.name() == 'FINISHED'}">
+        <h2>🏁 Fin de partie</h2>
+        <p>Gagnant: <b th:text="${game.winner}"></b></p>
+        <p class="muted">Les rôles ont été révélés dans les événements.</p>
+    </div>
+
+</div>
+
+<!-- Audio -->
+<audio id="audioNight" loop preload="auto">
+    <source th:src="@{/audio/wolves.ogg}" type="audio/ogg"/>
+    <source th:src="@{/audio/night.wav}" type="audio/wav" />
+</audio>
+<audio id="audioDay" loop preload="auto">
+    <source th:src="@{/audio/birds.ogg}" type="audio/ogg"/>
+    <source th:src="@{/audio/day.wav}" type="audio/wav" />
+</audio>
+<audio id="audioClick" preload="auto">
+    <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/UI%20Audio/click2.ogg" type="audio/ogg"/>
+    <source th:src="@{/audio/click.wav}" type="audio/wav" />
+</audio>
+
+<audio id="audioMorningCue" preload="auto">
+    <source th:src="@{/audio/birds.ogg}" type="audio/ogg"/>
+</audio>
+<audio id="audioNightCue" preload="auto">
+    <source th:src="@{/audio/wolves.ogg}" type="audio/ogg"/>
+</audio>
+
+<audio id="audioClickSfx" preload="auto">
+  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/UI%20Audio/click2.ogg" type="audio/ogg"/>
+</audio>
+<audio id="audioHover" preload="auto">
+  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/UI%20Audio/rollover1.ogg" type="audio/ogg"/>
+</audio>
+<audio id="audioToggle" preload="auto">
+  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/UI%20Audio/switch1.ogg" type="audio/ogg"/>
+</audio>
+
+<audio id="audioWolfSfx" preload="auto">
+  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/RPG%20Audio/knifeSlice.ogg" type="audio/ogg"/>
+</audio>
+<audio id="audioSeerSfx" preload="auto">
+  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/RPG%20Audio/bookOpen.ogg" type="audio/ogg"/>
+</audio>
+<audio id="audioWitchSfx" preload="auto">
+  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/RPG%20Audio/metalPot1.ogg" type="audio/ogg"/>
+</audio>
+<audio id="audioVoteSfx" preload="auto">
+  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/UI%20Audio/switch1.ogg" type="audio/ogg"/>
+</audio>
+<audio id="audioChatSfx" preload="auto">
+  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/UI%20Audio/click2.ogg" type="audio/ogg"/>
+</audio>
+
+<script th:inline="javascript">
+
+    window.WW = {
+        roomCode: /*[[${room.code}]]*/ "XXXXXX",
+        phase: /*[[${game.phase.name()}]]*/ "LOBBY",
+        phaseEndsAtMs: /*[[${phaseEndsAtMs}]]*/ 0,
+        serverNowMs: /*[[${serverNowMs}]]*/ 0
+    };
+</script>
+<script th:src="@{/js/game.js}"></script>
+<script id="game-upgrade-script">
+(function() {
+  function q(sel, root=document) { return root.querySelector(sel); }
+  function qq(sel, root=document) { return Array.from(root.querySelectorAll(sel)); }
+
+  const ICONS = {
+    info: "https://api.iconify.design/mdi:information-outline.svg?color=%23ffffff",
+    lock: "https://api.iconify.design/mdi:lock.svg?color=%23aab8ff",
+    sun: "https://api.iconify.design/mdi:white-balance-sunny.svg?color=%23ffe082",
+    moon: "https://api.iconify.design/mdi:moon-waning-crescent.svg?color=%23e3f2fd",
+    bird: "https://api.iconify.design/mdi:bird.svg?color=%23ffffff",
+    wolf: "https://api.iconify.design/mdi:wolf.svg?color=%23ffffff",
+    eye: "https://api.iconify.design/mdi:eye-outline.svg?color=%23ffffff",
+    flask: "https://api.iconify.design/mdi:flask-outline.svg?color=%23ffffff",
+    village: "https://api.iconify.design/mdi:account-group-outline.svg?color=%23ffffff",
+    vote: "https://api.iconify.design/mdi:vote-outline.svg?color=%23ffffff",
+    chat: "https://api.iconify.design/mdi:chat-processing-outline.svg?color=%23ffffff"
+  };
+
+  function toast({ title, body, kind="public", mood="" }) {
+    const stack = document.getElementById("toastStack");
+    if (!stack) return;
+
+    const el = document.createElement("div");
+    el.className = `toast ${kind} ${mood}`;
+
+    const img = document.createElement("img");
+    img.className = "tIcon";
+    img.alt = "";
+    img.src = (kind === "private") ? ICONS.lock : ICONS.info;
+
+    const text = document.createElement("div");
+    const t = document.createElement("div");
+    t.className = "tTitle";
+    t.textContent = title || "Événement";
+    const b = document.createElement("div");
+    b.className = "tBody";
+    b.textContent = body || "";
+    text.appendChild(t);
+    text.appendChild(b);
+
+    el.appendChild(img);
+    el.appendChild(text);
+    stack.appendChild(el);
+
+    setTimeout(() => {
+      el.style.animation = "toastOut .22s ease forwards";
+      setTimeout(() => el.remove(), 260);
+    }, 5200);
+  }
+
+  function play(id, vol=0.7) {
+    const a = document.getElementById(id);
+    if (!a) return;
+    try {
+      const node = a.cloneNode(true);
+      node.volume = Math.max(0, Math.min(1, vol));
+      const p = node.play();
+      if (p && typeof p.catch === "function") p.catch(()=>{});
+    } catch(e) {}
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    // Animated background assets
+    const bgDay = q("#bgDay");
+    const bgNight = q("#bgNight");
+
+    if (bgDay && !q(".bgSun", bgDay)) {
+      const sun = document.createElement("img");
+      sun.className = "bgSun";
+      sun.alt = "";
+      sun.src = ICONS.sun;
+      bgDay.appendChild(sun);
+
+      ["b1","b2","b3"].forEach((cls) => {
+        const bird = document.createElement("img");
+        bird.className = "bird " + cls;
+        bird.alt = "";
+        bird.src = ICONS.bird;
+        bgDay.appendChild(bird);
+      });
+    }
+
+    if (bgNight && !q(".bgMoon", bgNight)) {
+      const moon = document.createElement("img");
+      moon.className = "bgMoon";
+      moon.alt = "";
+      moon.src = ICONS.moon;
+      bgNight.appendChild(moon);
+
+      const stars = document.createElement("div");
+      stars.className = "stars";
+      bgNight.appendChild(stars);
+    }
+
+    // Phase + theme
+    const phase = (document.body.dataset.phase || "").toUpperCase();
+    const isNight = phase.startsWith("NIGHT");
+    document.body.classList.toggle("is-night", isNight);
+    document.body.classList.toggle("is-day", !isNight);
+
+    // Role showcase
+    const role = (document.body.dataset.role || "").toUpperCase();
+    const roleImg = q("#roleImg");
+    const roleNameText = q("#roleNameText");
+    const roleDesc = q("#roleDesc");
+    const roleMap = {
+      VILLAGER: { icon: ICONS.village, name: "Villageois", desc: "Discutez, observez, et votez intelligemment. Votre force: la logique collective." },
+      WOLF: { icon: ICONS.wolf, name: "Loup", desc: "La nuit, choisissez une victime. Le jour, bluffez pour survivre." },
+      SEER: { icon: ICONS.eye, name: "Voyante", desc: "Chaque nuit, découvrez l'alignement d'un joueur. Partagez l'info avec prudence." },
+      WITCH: { icon: ICONS.flask, name: "Sorcière", desc: "Sauvez ou éliminez (une fois chacun). Le bon timing change tout." },
+    };
+    if (roleMap[role]) {
+      if (roleImg) roleImg.src = roleMap[role].icon;
+      if (roleNameText) roleNameText.textContent = roleMap[role].name;
+      if (roleDesc) roleDesc.textContent = roleMap[role].desc;
+    }
+// Desktop sidebars (only on wide screens)
+const isWide = window.matchMedia("(min-width: 1100px)").matches;
+
+// Chat (discussion) -> right sidebar
+const chat = document.getElementById("chat");
+if (chat && isWide) {
+  const chatCard = chat.closest(".card");
+  if (chatCard) {
+    const sidebar = document.createElement("div");
+    sidebar.id = "chatSidebar";
+    sidebar.appendChild(chatCard);
+    document.body.appendChild(sidebar);
+    document.body.classList.add("hasChatSidebar");
+  }
+}
+
+// Events -> left sidebar (mirrors chat)
+const eventsEl = document.getElementById("events");
+if (eventsEl && isWide) {
+  const eventsCard = eventsEl.closest(".card");
+  if (eventsCard) {
+    const sidebar = document.createElement("div");
+    sidebar.id = "eventsSidebar";
+    sidebar.appendChild(eventsCard);
+    document.body.appendChild(sidebar);
+    document.body.classList.add("hasEventsSidebar");
+  }
+}
+
+// Events -> top toast
+if (eventsEl) {
+      let lastSnapshot = eventsEl.innerText || "";
+      const obs = new MutationObserver(() => {
+        const now = eventsEl.innerText || "";
+        if (now === lastSnapshot) return;
+        lastSnapshot = now;
+
+        const lines = now.split(/\n+/).map(s => s.trim()).filter(Boolean);
+        const last = lines[lines.length - 1];
+        if (!last) return;
+
+        const isPrivate = last.startsWith("🔒");
+        toast({
+          title: isPrivate ? "Action (privée)" : (isNight ? "Nuit" : "Jour"),
+          body: isPrivate ? last.replace(/^🔒\s*/,"") : last,
+          kind: isPrivate ? "private" : "public",
+          mood: isNight ? "night" : "day"
+        });
+      });
+      obs.observe(eventsEl, { childList: true, subtree: true, characterData: true });
+    }
+
+    // Role-specific submit SFX + instant feedback toast
+    function choiceLabelFromForm(form) {
+      // prefer selected option text
+      const sel = q("select", form);
+      if (sel && sel.selectedOptions && sel.selectedOptions[0]) {
+        return sel.selectedOptions[0].textContent.trim();
+      }
+      const checked = q("input[type=radio]:checked", form);
+      if (checked) {
+        const label = checked.closest("label");
+        const name = label ? q("b", label) : null;
+        return (name ? name.textContent.trim() : checked.value);
+      }
+      return "";
+    }
+
+    function wireForm(actionContains, sfxId, label, kind="private") {
+      const forms = qq(`form[action*="${actionContains}"]`);
+      forms.forEach((form) => {
+        form.addEventListener("submit", () => {
+          play(sfxId, 0.85);
+          const choice = choiceLabelFromForm(form);
+          toast({
+            title: label,
+            body: choice ? `Choix: ${choice}` : "Action envoyée.",
+            kind,
+            mood: isNight ? "night" : "day"
+          });
+        });
+      });
+    }
+
+    wireForm("/wolves/act", "audioWolfSfx", "Loups — attaque");
+    wireForm("/seer/act", "audioSeerSfx", "Voyante — vision");
+    wireForm("/witch/act", "audioWitchSfx", "Sorcière — potion");
+    wireForm("/vote", "audioVoteSfx", "Vote enregistré", "public");
+    wireForm("/chat", "audioChatSfx", "Message envoyé", "public");
+
+    // SFX toggle button (separate from ambience toggle)
+    const sfxEnabledKey = "ww_sfx";
+    let sfxEnabled = localStorage.getItem(sfxEnabledKey);
+    if (sfxEnabled === null) sfxEnabled = "1";
+
+    const controlsRow = q(".topbar .row.gap");
+    if (controlsRow && !q("#sfxToggle")) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn tiny secondary";
+      btn.id = "sfxToggle";
+      const paint = () => btn.textContent = (sfxEnabled === "1") ? "✨ SFX" : "🔇 SFX";
+      paint();
+
+      btn.addEventListener("click", () => {
+        sfxEnabled = (sfxEnabled === "1") ? "0" : "1";
+        localStorage.setItem(sfxEnabledKey, sfxEnabled);
+        paint();
+        play("audioToggle", 0.55);
+      });
+      controlsRow.appendChild(btn);
+
+      // unlock audio on first interaction (mobile/iOS)
+      const unlock = () => {
+        if (localStorage.getItem(sfxEnabledKey) === "1") play("audioClickSfx", 0.25);
+        window.removeEventListener("pointerdown", unlock);
+        window.removeEventListener("keydown", unlock);
+      };
+      window.addEventListener("pointerdown", unlock);
+      window.addEventListener("keydown", unlock);
+    }
+
+    // Hover/click micro-SFX (very light)
+    qq("button.btn, a.link, label.pick").forEach((el) => {
+      el.addEventListener("pointerenter", () => {
+        if (localStorage.getItem(sfxEnabledKey) === "1") play("audioHover", 0.15);
+      });
+      el.addEventListener("pointerdown", () => {
+        if (localStorage.getItem(sfxEnabledKey) === "1") play("audioClickSfx", 0.20);
+      });
+    });
+
+    // Day/Night transition cues (based on last phase)
+    const lastPhaseKey = "ww_last_phase";
+    const lastPhase = (localStorage.getItem(lastPhaseKey) || "").toUpperCase();
+    if (lastPhase && lastPhase !== phase) {
+      if (isNight) play("audioNightCue", 0.55);
+      else play("audioMorningCue", 0.55);
+    }
+    localStorage.setItem(lastPhaseKey, phase);
+  });
+})();
+</script>
+
+</body>
+</html>
