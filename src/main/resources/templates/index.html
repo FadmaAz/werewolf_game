@@ -11,14 +11,16 @@
     <link rel="stylesheet" th:href="@{/css/app.css}">
     <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.7.1/dist/dotlottie-wc.js" type="module"></script>
     <style>
+        html, body { height: 100%; }
         body {
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
             background: linear-gradient(135deg, #0a0e1a 0%, #1a1432 50%, #0e1828 100%);
             color: #f1f5f9;
             font-family: 'Inter', sans-serif;
             margin: 0; padding: 0;
             position: relative;
-            overflow-x: hidden;
+            overflow: hidden;
         }
         .animation-background {
             position: fixed; top: 0; left: 0;
@@ -27,17 +29,20 @@
         }
         .content-wrapper {
             position: relative; z-index: 1;
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
+            min-height: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 2rem 1rem;
-            gap: 2rem;
+            padding: clamp(0.75rem, 2vh, 2rem) 1rem;
+            gap: clamp(0.75rem, 2vh, 2rem);
+            overflow: hidden;
         }
         .hero-title {
             font-family: 'Creepster', cursive;
-            font-size: 4rem;
+            font-size: clamp(2rem, 6vh, 3.6rem);
             color: #ef4444;
             text-shadow: 0 0 30px rgba(220,38,38,0.8), 0 0 60px rgba(220,38,38,0.5);
             margin: 0;
@@ -49,7 +54,7 @@
             color: #94a3b8;
             font-size: 1rem;
             text-align: center;
-            margin-top: -1rem;
+            margin-top: -0.5rem;
         }
         @keyframes pulse {
             0%,100% { text-shadow: 0 0 30px rgba(220,38,38,0.8), 0 0 60px rgba(220,38,38,0.5); }
@@ -61,7 +66,7 @@
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 24px;
-            padding: 2.5rem 2rem;
+            padding: clamp(1rem, 2.6vh, 2.2rem) 2rem;
             box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset;
             animation: float 4s ease-in-out infinite;
         }
@@ -179,8 +184,25 @@
             padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.9rem;
         }
         @media (max-width: 480px) {
-            .hero-title { font-size: 2.8rem; }
+            .hero-title { font-size: clamp(1.8rem, 7vh, 2.8rem); }
             .avatar-grid { grid-template-columns: repeat(5, 1fr); gap: 0.4rem; }
+            .card-join { padding: 1.25rem 1.25rem; }
+        }
+
+        /* Short viewports: compress so everything still fits without scrolling */
+        @media (max-height: 760px) {
+            .hero-sub { display: none; }
+            .card-join { padding: 1.1rem 1.5rem; }
+            .card-join h2 { font-size: 1.1rem; margin-bottom: 1rem; }
+            .avatar-grid { gap: 0.4rem; }
+            .content-wrapper { gap: 0.6rem; }
+        }
+        @media (max-height: 620px) {
+            .hero-title { font-size: 1.8rem; }
+            .card-join { padding: 0.85rem 1.1rem; }
+            .card-join h2 { font-size: 1rem; margin-bottom: 0.6rem; }
+            .mb-4 { margin-bottom: 0.7rem !important; }
+            .content-wrapper { gap: 0.4rem; }
         }
     </style>
 </head>
