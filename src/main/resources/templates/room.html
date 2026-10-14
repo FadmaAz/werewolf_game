@@ -1,3 +1,489 @@
+<!--<!doctype html>-->
+<!--<html xmlns:th="http://www.thymeleaf.org">-->
+<!--<head>-->
+<!--    <meta charset="utf-8"/>-->
+<!--    <title>Room - Loup-Garou</title>-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1"/>-->
+<!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">-->
+<!--    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">-->
+<!--    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">-->
+<!--    <style>-->
+<!--        html, body { height: 100%; }-->
+<!--        body {-->
+<!--           background: linear-gradient(135deg, rgba(10, 14, 39, 0.70) 0%, rgba(30, 27, 75, 0.70) 100%),-->
+<!--                        url('/images/background.png');-->
+<!--        background-size: cover;-->
+<!--            min-height: 100vh;-->
+<!--            color: #f1f5f9;-->
+<!--            font-family: 'Inter', sans-serif;-->
+<!--            height: 100vh;-->
+<!--            height: 100dvh;-->
+<!--            overflow: hidden;-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--        }-->
+
+<!--        /* Single-page layout */-->
+<!--        .navbar-custom {-->
+<!--            background: rgba(10, 14, 39, 0.95);-->
+<!--            backdrop-filter: blur(10px);-->
+<!--            padding: 0.5rem 0;-->
+<!--            border-bottom: 1px solid rgba(220, 38, 38, 0.3);-->
+<!--            margin-bottom: 0.6rem;-->
+<!--            flex: 0 0 auto;-->
+<!--        }-->
+
+<!--        .room-main {-->
+<!--            flex: 1 1 auto;-->
+<!--            min-height: 0;-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            overflow: hidden;-->
+<!--        }-->
+
+<!--        .avatar {-->
+<!--            width: 48px;-->
+<!--            height: 48px;-->
+<!--            border-radius: 50%;-->
+<!--            border: 2px solid #dc2626;-->
+<!--            object-fit: cover;-->
+<!--        }-->
+
+<!--        .avatar-big {-->
+<!--            width: 80px;-->
+<!--            height: 80px;-->
+<!--        }-->
+
+<!--        .room-code-container {-->
+<!--            display: inline-flex;-->
+<!--            align-items: center;-->
+<!--            gap: 1rem;-->
+<!--        }-->
+
+<!--        .room-code {-->
+<!--            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);-->
+<!--            padding: 0.75rem 1.5rem;-->
+<!--            border-radius: 10px;-->
+<!--            font-weight: 700;-->
+<!--            font-size: 1.5rem;-->
+<!--            letter-spacing: 4px;-->
+<!--            display: inline-block;-->
+<!--            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);-->
+<!--            animation: pulse 2s ease-in-out infinite;-->
+<!--        }-->
+
+<!--        .copy-btn {-->
+<!--            background: rgba(220, 38, 38, 0.2);-->
+<!--            border: 2px solid #dc2626;-->
+<!--            color: #dc2626;-->
+<!--            width: 48px;-->
+<!--            height: 48px;-->
+<!--            border-radius: 10px;-->
+<!--            display: inline-flex;-->
+<!--            align-items: center;-->
+<!--            justify-content: center;-->
+<!--            cursor: pointer;-->
+<!--            transition: all 0.3s ease;-->
+<!--            font-size: 1.25rem;-->
+<!--        }-->
+
+<!--        .copy-btn:hover {-->
+<!--            background: #dc2626;-->
+<!--            color: white;-->
+<!--            transform: scale(1.1);-->
+<!--            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.5);-->
+<!--        }-->
+
+<!--        .copy-btn.copied {-->
+<!--            background: #10b981;-->
+<!--            border-color: #10b981;-->
+<!--            color: white;-->
+<!--        }-->
+
+<!--        @keyframes pulse {-->
+<!--            0%, 100% { box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3); }-->
+<!--            50% { box-shadow: 0 6px 25px rgba(220, 38, 38, 0.5); }-->
+<!--        }-->
+
+<!--        .card {-->
+<!--            background: rgba(26, 31, 58, 0.85);-->
+<!--            border: 1px solid rgba(220, 38, 38, 0.3);-->
+<!--            border-radius: 15px;-->
+<!--            backdrop-filter: blur(10px);-->
+<!--            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);-->
+<!--        }-->
+
+<!--        .card-header {-->
+<!--            background: rgba(220, 38, 38, 0.1);-->
+<!--            border-bottom: 1px solid rgba(220, 38, 38, 0.3);-->
+<!--            font-weight: 700;-->
+<!--            color: #f1f5f9;-->
+<!--        }-->
+
+<!--        .stat-box {-->
+<!--            background: rgba(10, 14, 39, 0.4);-->
+<!--            border: 1px solid rgba(220, 38, 38, 0.3);-->
+<!--            border-radius: 10px;-->
+<!--            padding: 1.5rem;-->
+<!--            text-align: center;-->
+<!--        }-->
+
+<!--        .stat-value {-->
+<!--            font-size: 2.5rem;-->
+<!--            font-weight: 700;-->
+<!--            color: #dc2626;-->
+<!--        }-->
+
+<!--        .players-grid {-->
+<!--            display: grid;-->
+<!--            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));-->
+<!--            gap: 1.5rem;-->
+<!--            margin-top: 1.5rem;-->
+<!--        }-->
+
+<!--        .player-card {-->
+<!--            background: rgba(10, 14, 39, 0.4);-->
+<!--            border: 2px solid rgba(220, 38, 38, 0.3);-->
+<!--            border-radius: 12px;-->
+<!--            padding: 1.5rem;-->
+<!--            text-align: center;-->
+<!--            transition: all 0.3s ease;-->
+<!--            position: relative;-->
+<!--            overflow: hidden;-->
+<!--        }-->
+
+<!--        .player-card::before {-->
+<!--            content: '';-->
+<!--            position: absolute;-->
+<!--            top: 0;-->
+<!--            left: 0;-->
+<!--            right: 0;-->
+<!--            height: 4px;-->
+<!--            background: linear-gradient(90deg, #dc2626, #991b1b);-->
+<!--            opacity: 0;-->
+<!--            transition: opacity 0.3s ease;-->
+<!--        }-->
+
+<!--        .player-card:hover {-->
+<!--            transform: translateY(-5px);-->
+<!--            border-color: #dc2626;-->
+<!--            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);-->
+<!--        }-->
+
+<!--        .player-card:hover::before {-->
+<!--            opacity: 1;-->
+<!--        }-->
+
+<!--        .player-name {-->
+<!--            font-weight: 600;-->
+<!--            margin-top: 1rem;-->
+<!--            font-size: 1.1rem;-->
+<!--            color: #f1f5f9;-->
+<!--        }-->
+
+<!--        .badge-status {-->
+<!--            padding: 0.5rem 1rem;-->
+<!--            border-radius: 20px;-->
+<!--            font-weight: 600;-->
+<!--            font-size: 0.875rem;-->
+<!--        }-->
+
+<!--        .badge-green {-->
+<!--            background: rgba(16, 185, 129, 0.2);-->
+<!--            color: #6ee7b7;-->
+<!--            border: 1px solid #10b981;-->
+<!--        }-->
+
+<!--        .badge-gray {-->
+<!--            background: rgba(148, 163, 184, 0.2);-->
+<!--            color: #cbd5e1;-->
+<!--            border: 1px solid #64748b;-->
+<!--        }-->
+
+<!--        .btn-start {-->
+<!--            background: linear-gradient(135deg, #10b981 0%, #059669 100%);-->
+<!--            border: none;-->
+<!--            font-weight: 700;-->
+<!--            font-size: 1.25rem;-->
+<!--            padding: 1rem 2rem;-->
+<!--            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);-->
+<!--        }-->
+
+<!--        .btn-start:hover {-->
+<!--            transform: translateY(-2px);-->
+<!--            box-shadow: 0 6px 25px rgba(16, 185, 129, 0.5);-->
+<!--        }-->
+
+<!--        .btn-enter {-->
+<!--            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);-->
+<!--            border: none;-->
+<!--            font-weight: 700;-->
+<!--            padding: 0.875rem 2rem;-->
+<!--            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);-->
+<!--        }-->
+
+<!--        .btn-enter:hover {-->
+<!--            transform: translateY(-2px);-->
+<!--            box-shadow: 0 6px 25px rgba(124, 58, 237, 0.5);-->
+<!--        }-->
+
+<!--        .waiting-message {-->
+<!--            background: rgba(124, 58, 237, 0.1);-->
+<!--            border: 1px solid rgba(124, 58, 237, 0.3);-->
+<!--            border-radius: 10px;-->
+<!--            padding: 1.5rem;-->
+<!--            text-align: center;-->
+<!--        }-->
+
+<!--        .waiting-message h5 {-->
+<!--            color: #f1f5f9;-->
+<!--        }-->
+
+<!--        .link-custom {-->
+<!--            color: #dc2626;-->
+<!--            text-decoration: none;-->
+<!--            font-weight: 600;-->
+<!--        }-->
+
+<!--        .link-custom:hover {-->
+<!--            color: #fca5a5;-->
+<!--        }-->
+
+<!--        .alert-danger {-->
+<!--            background: rgba(220, 38, 38, 0.2);-->
+<!--            border-left: 4px solid #dc2626;-->
+<!--            color: #fca5a5;-->
+<!--        }-->
+
+<!--        /* Creepster font styling for main title */-->
+<!--        .page-title {-->
+<!--            font-family: 'Creepster', cursive;-->
+<!--            font-size: clamp(1.8rem, 4.5vh, 3rem);-->
+<!--            color: #dc2626;-->
+<!--            text-shadow: 0 0 15px rgba(220, 38, 38, 0.5);-->
+<!--        }-->
+
+<!--        .text-muted {-->
+<!--            color: #cbd5e1 !important;-->
+<!--        }-->
+
+<!--        .stat-box .text-muted {-->
+<!--            color: #94a3b8 !important;-->
+<!--        }-->
+
+<!--        .stat-box .text-danger {-->
+<!--            color: #fca5a5 !important;-->
+<!--        }-->
+
+<!--        .stat-box .fw-bold {-->
+<!--            color: #f1f5f9 !important;-->
+<!--        }-->
+
+<!--        .card-body .text-success {-->
+<!--            color: #6ee7b7 !important;-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--&lt;!&ndash; Top Navigation &ndash;&gt;-->
+<!--<nav class="navbar-custom">-->
+<!--    <div class="container">-->
+<!--        <div class="d-flex justify-content-between align-items-center w-100">-->
+<!--            <a class="link-custom fs-5" th:href="@{/play}">-->
+<!--                <i class="bi bi-arrow-left me-2"></i>Retour-->
+<!--            </a>-->
+<!--            <div class="d-flex align-items-center gap-3">-->
+<!--                <img class="avatar" th:src="@{|/avatars/${me.avatar}|}" alt="avatar"/>-->
+<!--                <span class="fw-bold" th:text="${me.username}">Username</span>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</nav>-->
+
+<!--<div class="container room-main">-->
+<!--    <div class="text-center mb-2">-->
+<!--        <h1 class="page-title mb-3">-->
+<!--            <i class="bi bi-door-open-fill me-3"></i>Room-->
+<!--        </h1>-->
+<!--        <div class="room-code-container">-->
+<!--            <div class="room-code" th:text="${room.code}" id="roomCode">AB12CD</div>-->
+<!--            <button class="copy-btn" onclick="copyRoomCode()" title="Copier le code">-->
+<!--                <i class="bi bi-clipboard" id="copyIcon"></i>-->
+<!--            </button>-->
+<!--        </div>-->
+<!--        <p class="text-muted mt-2">Partagez ce code avec vos amis</p>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Error Alert &ndash;&gt;-->
+<!--    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-2" role="alert">-->
+<!--        <i class="bi bi-exclamation-triangle-fill me-2"></i>-->
+<!--        <span th:text="${error}">Error message</span>-->
+<!--        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Room Info Card &ndash;&gt;-->
+<!--    <div class="card mb-2">-->
+<!--        <div class="card-body">-->
+<!--            <div class="row align-items-center">-->
+<!--                <div class="col-md-6">-->
+<!--                    <div class="stat-box py-2">-->
+<!--                        <div class="stat-value" style="font-size:2rem" th:text="${count}">0</div>-->
+<!--                        <div class="text-muted small">-->
+<!--                            Joueurs <span class="text-danger">(min. 5)</span>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="col-md-6 mt-2 mt-md-0">-->
+<!--                    <div class="stat-box py-2">-->
+<!--                        <div class="mb-1">-->
+<!--                            <i class="bi bi-crown-fill text-warning" style="font-size: 1.4rem;"></i>-->
+<!--                        </div>-->
+<!--                        <div class="fw-bold fs-6" th:text="${room.admin.username}">Admin</div>-->
+<!--                        <div class="text-muted small">Administrateur</div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            <div class="text-center mt-4">-->
+<!--          <span th:if="${gameStarted}" class="badge-status badge-green">-->
+<!--            <i class="bi bi-play-circle-fill me-2"></i>Partie en cours-->
+<!--          </span>-->
+<!--                <span th:if="${!gameStarted}" class="badge-status badge-gray">-->
+<!--            <i class="bi bi-hourglass-split me-2"></i>En attente de joueurs-->
+<!--          </span>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Players Grid &ndash;&gt;-->
+<!--    <div class="card mb-2" style="flex:1 1 auto; min-height:0; display:flex; flex-direction:column; overflow:hidden;">-->
+<!--        <div class="card-header py-1">-->
+<!--            <i class="bi bi-people-fill me-2"></i>Joueurs-->
+<!--        </div>-->
+<!--        <div class="card-body py-2" style="overflow:auto; min-height:0; flex:1 1 auto;">-->
+<!--            <div class="players-grid" style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap:0.8rem; margin-top:0.3rem;">-->
+<!--                <div class="player-card py-2 px-1" th:each="m : ${members}">-->
+<!--                    <img class="avatar avatar-big" th:src="@{|/avatars/${m.user.avatar}|}" alt="avatar" style="width:56px;height:56px;"/>-->
+<!--                    <div class="player-name" th:text="${m.user.username}">Player</div>-->
+<!--            <span th:if="${m.user.bot}" style="-->
+<!--                        background: rgba(139,92,246,0.2);-->
+<!--                        border: 1px solid rgba(139,92,246,0.5);-->
+<!--                        color: #c4b5fd;-->
+<!--                        font-size: 0.7rem;-->
+<!--                        border-radius: 20px;-->
+<!--                        padding: 1px 8px;-->
+<!--                        margin-top: 2px;-->
+<!--                        display:inline-block;">🤖 Robot</span>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Admin Actions &ndash;&gt;-->
+<!--    <div class="card" th:if="${isAdmin}" style="flex:0 0 auto;">-->
+<!--        <div class="card-body text-center py-2">-->
+
+<!--            &lt;!&ndash; Add Bot button &ndash;&gt;-->
+<!--            <form method="post" th:action="@{|/room/${room.code}/addBot|}" th:if="${!gameStarted}" class="mb-3">-->
+<!--                <button type="submit" class="btn w-100"-->
+<!--                        th:disabled="${botCount >= 5}"-->
+<!--                        style="background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.5);-->
+<!--                               color: #c4b5fd; border-radius: 12px; padding: 0.65rem; font-weight: 600;-->
+<!--                               transition: all 0.3s;">-->
+<!--                    <i class="bi bi-robot me-2"></i>Ajouter un Robot 🤖-->
+<!--                    <span style="color:#94a3b8;font-size:0.8rem;"-->
+<!--                          th:text="|(${botCount}/5)|"></span>-->
+<!--                </button>-->
+<!--            </form>-->
+
+<!--            <form method="post" th:action="@{|/room/${room.code}/start|}" th:if="${!gameStarted}">-->
+<!--                <button-->
+<!--                        class="btn btn-primary btn-start w-100 mb-3"-->
+<!--                        type="submit"-->
+<!--                        th:disabled="${count < 5}">-->
+<!--                    <i class="bi bi-rocket-takeoff-fill me-2"></i>Lancer la Partie-->
+<!--                </button>-->
+<!--                <p class="text-muted small" th:if="${count < 5}">-->
+<!--                    <i class="bi bi-info-circle me-1"></i>-->
+<!--                    Encore <span th:text="${5 - count}">X</span> joueur(s) manquants-->
+<!--                    (ajoutez des robots si besoin !)-->
+<!--                </p>-->
+<!--            </form>-->
+
+<!--            <a class="btn btn-primary btn-enter w-100" th:href="@{|/game/${room.code}|}" th:if="${gameStarted}">-->
+<!--                <i class="bi bi-arrow-right-circle-fill me-2"></i>Entrer dans le Jeu-->
+<!--            </a>-->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Non-Admin Wait Message &ndash;&gt;-->
+<!--    <div class="waiting-message" th:if="${!isAdmin && !gameStarted}" style="flex:0 0 auto;">-->
+<!--        <i class="bi bi-hourglass-split" style="font-size: 2rem; color: #7c3aed;"></i>-->
+<!--        <h6 class="mt-2 mb-1">En attente du lancement</h6>-->
+<!--        <p class="text-muted small mb-0">L'administrateur lancera la partie quand tout le monde sera prêt</p>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Non-Admin Enter Game &ndash;&gt;-->
+<!--    <div class="card text-center" th:if="${!isAdmin && gameStarted}" style="flex:0 0 auto;">-->
+<!--        <div class="card-body py-2">-->
+<!--            <i class="bi bi-play-circle-fill text-success" style="font-size: 3rem;"></i>-->
+<!--            <h5 class="mt-3 mb-4" style="color: #f1f5f9;">La partie a commencé !</h5>-->
+<!--            <a class="btn btn-primary btn-enter" th:href="@{|/game/${room.code}|}">-->
+<!--                <i class="bi bi-arrow-right-circle-fill me-2"></i>Entrer dans le Jeu-->
+<!--            </a>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>-->
+<!--<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>-->
+<!--<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>-->
+<!--<script>-->
+<!--    function copyRoomCode() {-->
+<!--        const roomCode = document.getElementById('roomCode').textContent;-->
+<!--        const copyBtn = document.querySelector('.copy-btn');-->
+<!--        const copyIcon = document.getElementById('copyIcon');-->
+
+<!--        navigator.clipboard.writeText(roomCode).then(() => {-->
+<!--            copyBtn.classList.add('copied');-->
+<!--            copyIcon.className = 'bi bi-check-lg';-->
+
+<!--            setTimeout(() => {-->
+<!--                copyBtn.classList.remove('copied');-->
+<!--                copyIcon.className = 'bi bi-clipboard';-->
+<!--            }, 2000);-->
+<!--        }).catch(err => {-->
+<!--            console.error('Failed to copy:', err);-->
+<!--        });-->
+<!--    }-->
+<!--</script>-->
+<!--<script th:inline="javascript">-->
+<!--    (function() {-->
+<!--        const roomCode = /*[[${room.code}]]*/ "XXXXXX";-->
+<!--        const started = /*[[${gameStarted}]]*/ false;-->
+
+<!--        // Fallback: if the WebSocket libraries are unavailable, keep polling.-->
+<!--        if (typeof SockJS === "undefined" || typeof StompJs === "undefined") {-->
+<!--            setInterval(function() { if (!started) location.reload(); }, 3000);-->
+<!--            return;-->
+<!--        }-->
+
+<!--        const client = new StompJs.Client({-->
+<!--            webSocketFactory: () => new SockJS('/ws'),-->
+<!--            reconnectDelay: 3000-->
+<!--        });-->
+
+<!--        client.onConnect = function() {-->
+<!--            // Any change to the room membership or game start -> refresh the page-->
+<!--            client.subscribe('/topic/room/' + roomCode, function() { location.reload(); });-->
+<!--        };-->
+
+<!--        client.activate();-->
+<!--    })();-->
+<!--</script>-->
+<!--</body>-->
+<!--</html>-->
+
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -10,9 +496,9 @@
     <style>
         html, body { height: 100%; }
         body {
-           background: linear-gradient(135deg, rgba(10, 14, 39, 0.70) 0%, rgba(30, 27, 75, 0.70) 100%),
-                        url('/images/background.png');
-        background-size: cover;
+            background: linear-gradient(135deg, rgba(10, 14, 39, 0.70) 0%, rgba(30, 27, 75, 0.70) 100%),
+            url('/images/background.png');
+            background-size: cover;
             min-height: 100vh;
             color: #f1f5f9;
             font-family: 'Inter', sans-serif;
@@ -23,7 +509,6 @@
             flex-direction: column;
         }
 
-        /* Single-page layout */
         .navbar-custom {
             background: rgba(10, 14, 39, 0.95);
             backdrop-filter: blur(10px);
@@ -49,10 +534,7 @@
             object-fit: cover;
         }
 
-        .avatar-big {
-            width: 80px;
-            height: 80px;
-        }
+        .avatar-big { width: 80px; height: 80px; }
 
         .room-code-container {
             display: inline-flex;
@@ -170,9 +652,7 @@
             box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
         }
 
-        .player-card:hover::before {
-            opacity: 1;
-        }
+        .player-card:hover::before { opacity: 1; }
 
         .player-name {
             font-weight: 600;
@@ -200,18 +680,85 @@
             border: 1px solid #64748b;
         }
 
+        /* ===== Bouton Lancer : rouge sang très foncé ===== */
+        /* Actif (>= 5 joueurs) : rouge vif lumineux qui pulse */
         .btn-start {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            border: none;
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            border: 1px solid #f87171;
+            color: #fff;
             font-weight: 700;
             font-size: 1.25rem;
             padding: 1rem 2rem;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 18px rgba(239, 68, 68, 0.7);
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+            animation: startGlow 1.8s ease-in-out infinite;
         }
 
-        .btn-start:hover {
+        @keyframes startGlow {
+            0%, 100% { box-shadow: 0 0 14px rgba(239, 68, 68, 0.6); }
+            50% { box-shadow: 0 0 32px rgba(248, 113, 113, 0.95); }
+        }
+
+        .btn-start:hover:not(:disabled),
+        .btn-start:focus:not(:disabled),
+        .btn-start:active:not(:disabled) {
+            background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+            border-color: #fca5a5;
+            color: #fff;
             transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(16, 185, 129, 0.5);
+        }
+
+        /* Désactivé (< 5 joueurs) : rouge sang très foncé, éteint */
+        .btn-start:disabled {
+            background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);
+            border-color: #991b1b;
+            color: #fecaca;
+            text-shadow: none;
+            box-shadow: none;
+            animation: none;
+            opacity: 0.5;
+        }
+
+        /* ===== Bouton Ajouter un Robot : violet maléfique ===== */
+        .btn-addbot {
+            background: linear-gradient(135deg, #3b0764 0%, #1e1b4b 100%);
+            border: 1px solid #6b21a8;
+            color: #e9d5ff;
+            border-radius: 12px;
+            padding: 0.65rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(88, 28, 135, 0.45);
+            transition: all 0.3s ease;
+        }
+
+        .btn-addbot:hover:not(:disabled),
+        .btn-addbot:focus:not(:disabled),
+        .btn-addbot:active:not(:disabled) {
+            background: linear-gradient(135deg, #581c87 0%, #2e1065 100%);
+            border-color: #7e22ce;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(126, 34, 206, 0.65);
+        }
+
+        .btn-addbot:disabled {
+            background: linear-gradient(135deg, #3b0764 0%, #1e1b4b 100%);
+            border-color: #6b21a8;
+            color: #e9d5ff;
+            opacity: 0.5;
+        }
+
+        /* ===== Badge Loup-Bot ===== */
+        .bot-badge {
+            background: rgba(127, 29, 29, 0.3);
+            border: 1px solid rgba(220, 38, 38, 0.5);
+            color: #fca5a5;
+            font-size: 0.7rem;
+            border-radius: 20px;
+            padding: 1px 8px;
+            margin-top: 2px;
+            display: inline-block;
         }
 
         .btn-enter {
@@ -235,9 +782,7 @@
             text-align: center;
         }
 
-        .waiting-message h5 {
-            color: #f1f5f9;
-        }
+        .waiting-message h5 { color: #f1f5f9; }
 
         .link-custom {
             color: #dc2626;
@@ -245,9 +790,7 @@
             font-weight: 600;
         }
 
-        .link-custom:hover {
-            color: #fca5a5;
-        }
+        .link-custom:hover { color: #fca5a5; }
 
         .alert-danger {
             background: rgba(220, 38, 38, 0.2);
@@ -255,7 +798,6 @@
             color: #fca5a5;
         }
 
-        /* Creepster font styling for main title */
         .page-title {
             font-family: 'Creepster', cursive;
             font-size: clamp(1.8rem, 4.5vh, 3rem);
@@ -263,24 +805,108 @@
             text-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
         }
 
-        .text-muted {
-            color: #cbd5e1 !important;
+        .text-muted { color: #cbd5e1 !important; }
+        .stat-box .text-muted { color: #94a3b8 !important; }
+        .stat-box .text-danger { color: #fca5a5 !important; }
+        .stat-box .fw-bold { color: #f1f5f9 !important; }
+        .card-body .text-success { color: #6ee7b7 !important; }
+
+        /* Carte d'infos */
+        .info-card {
+            width: 48vw;
+            min-width: 520px;
+            max-width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            backdrop-filter: none;
+        }
+        .info-card .stat-box {
+            padding: 0.5rem 0.75rem;
+            border-radius: 10px;
+        }
+        .info-card .stat-players {
+            background: rgba(220, 38, 38, 0.18);
+            border: 1px solid rgba(220, 38, 38, 0.5);
+        }
+        .info-card .stat-admin {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+        }
+        .info-card .stat-box .small { white-space: nowrap; }
+        .info-card .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 0.75rem;
+        }
+        .info-card .info-row .stat-box {
+            flex: 0 0 28%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .info-card .info-row .info-status {
+            align-self: center;
+            flex: 1 1 auto;
+            text-align: center;
+            white-space: nowrap;
+        }
+        @media (max-width: 1199.98px) {
+            .info-card { width: 100%; min-width: 0; }
+            .info-card .info-row { flex-wrap: wrap; }
+            .info-card .info-row .stat-box { flex: 1 1 40%; }
+            .info-card .info-row .info-status { order: 3; flex: 1 1 100%; }
         }
 
-        .stat-box .text-muted {
-            color: #94a3b8 !important;
+        /* Joueurs */
+        .players-grid.compact {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: stretch;
+            gap: 0.75rem;
+            margin-top: 0;
         }
-
-        .stat-box .text-danger {
-            color: #fca5a5 !important;
+        .players-card {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            backdrop-filter: none;
         }
-
-        .stat-box .fw-bold {
-            color: #f1f5f9 !important;
+        .players-card .card-header {
+            background: transparent;
+            border-bottom: none;
+            text-align: center;
+            font-size: 1.5rem;
         }
-
-        .card-body .text-success {
-            color: #6ee7b7 !important;
+        .players-grid.compact .player-card {
+            background: transparent;
+            border: 1px solid rgba(220, 38, 38, 0.6);
+            border-radius: 12px;
+            box-shadow: none;
+            flex: 0 0 190px;
+            width: 190px;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .players-grid.compact .player-card::before { display: none; }
+        .players-grid.compact .player-card:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        .players-grid.compact .player-name {
+            margin-top: 0.25rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
 </head>
@@ -322,58 +948,45 @@
     </div>
 
     <!-- Room Info Card -->
-    <div class="card mb-2">
-        <div class="card-body">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <div class="stat-box py-2">
-                        <div class="stat-value" style="font-size:2rem" th:text="${count}">0</div>
-                        <div class="text-muted small">
-                            Joueurs <span class="text-danger">(min. 5)</span>
-                        </div>
+    <div class="card info-card mb-2">
+        <div class="card-body p-1">
+            <div class="info-row">
+                <div class="stat-box stat-players">
+                    <div class="stat-value" style="font-size:1.6rem; line-height:1.2" th:text="${count}">0</div>
+                    <div class="text-muted small">
+                        Joueurs <span class="text-danger">(min. 5)</span>
                     </div>
                 </div>
-                <div class="col-md-6 mt-2 mt-md-0">
-                    <div class="stat-box py-2">
-                        <div class="mb-1">
-                            <i class="bi bi-crown-fill text-warning" style="font-size: 1.4rem;"></i>
-                        </div>
-                        <div class="fw-bold fs-6" th:text="${room.admin.username}">Admin</div>
-                        <div class="text-muted small">Administrateur</div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="text-center mt-4">
-          <span th:if="${gameStarted}" class="badge-status badge-green">
-            <i class="bi bi-play-circle-fill me-2"></i>Partie en cours
-          </span>
-                <span th:if="${!gameStarted}" class="badge-status badge-gray">
-            <i class="bi bi-hourglass-split me-2"></i>En attente de joueurs
-          </span>
+                <div class="info-status">
+                    <span th:if="${gameStarted}" class="badge-status badge-green">
+                        <i class="bi bi-play-circle-fill me-2"></i>Partie en cours
+                    </span>
+                    <span th:if="${!gameStarted}" class="badge-status badge-gray">
+                        <i class="bi bi-hourglass-split me-2"></i>En attente de joueurs
+                    </span>
+                </div>
+
+                <div class="stat-box stat-admin">
+                    <span style="font-size: 1.1rem; line-height: 1;">👑</span>
+                    <div class="fw-bold small" th:text="${room.admin.username}">Admin</div>
+                    <div class="text-muted small">Administrateur</div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Players Grid -->
-    <div class="card mb-2" style="flex:1 1 auto; min-height:0; display:flex; flex-direction:column; overflow:hidden;">
+    <div class="card players-card mb-2" style="flex:1 1 auto; min-height:0; display:flex; flex-direction:column; overflow:hidden;">
         <div class="card-header py-1">
             <i class="bi bi-people-fill me-2"></i>Joueurs
         </div>
-        <div class="card-body py-2" style="overflow:auto; min-height:0; flex:1 1 auto;">
-            <div class="players-grid" style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap:0.8rem; margin-top:0.3rem;">
-                <div class="player-card py-2 px-1" th:each="m : ${members}">
-                    <img class="avatar avatar-big" th:src="@{|/avatars/${m.user.avatar}|}" alt="avatar" style="width:56px;height:56px;"/>
+        <div class="card-body py-2 d-flex align-items-center justify-content-center" style="min-height:0; flex:1 1 auto; overflow:hidden;">
+            <div class="players-grid compact">
+                <div class="player-card" th:each="m : ${members}">
+                    <img class="avatar avatar-big" th:src="@{|/avatars/${m.user.avatar}|}" alt="avatar" style="width:44px;height:44px;"/>
                     <div class="player-name" th:text="${m.user.username}">Player</div>
-            <span th:if="${m.user.bot}" style="
-                        background: rgba(139,92,246,0.2);
-                        border: 1px solid rgba(139,92,246,0.5);
-                        color: #c4b5fd;
-                        font-size: 0.7rem;
-                        border-radius: 20px;
-                        padding: 1px 8px;
-                        margin-top: 2px;
-                        display:inline-block;">🤖 Robot</span>
+                    <span th:if="${m.user.bot}" class="bot-badge">🐺 Loup-Bot</span>
                 </div>
             </div>
         </div>
@@ -383,32 +996,32 @@
     <div class="card" th:if="${isAdmin}" style="flex:0 0 auto;">
         <div class="card-body text-center py-2">
 
-            <!-- Add Bot button -->
-            <form method="post" th:action="@{|/room/${room.code}/addBot|}" th:if="${!gameStarted}" class="mb-3">
-                <button type="submit" class="btn w-100"
-                        th:disabled="${botCount >= 5}"
-                        style="background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.5);
-                               color: #c4b5fd; border-radius: 12px; padding: 0.65rem; font-weight: 600;
-                               transition: all 0.3s;">
-                    <i class="bi bi-robot me-2"></i>Ajouter un Robot 🤖
-                    <span style="color:#94a3b8;font-size:0.8rem;"
-                          th:text="|(${botCount}/5)|"></span>
-                </button>
-            </form>
+            <div class="d-flex gap-2" th:if="${!gameStarted}">
+                <form method="post" th:action="@{|/room/${room.code}/addBot|}" class="flex-fill">
+                    <button type="submit" class="btn btn-addbot w-100 h-100"
+                            th:disabled="${botCount >= 5}">
+                        Invoquer un Loup-Bot 🐺
+                        <span style="color:#c4b5fd;font-size:0.8rem;"
+                              th:text="|(${botCount}/5)|"></span>
+                    </button>
+                </form>
 
-            <form method="post" th:action="@{|/room/${room.code}/start|}" th:if="${!gameStarted}">
-                <button
-                        class="btn btn-primary btn-start w-100 mb-3"
-                        type="submit"
-                        th:disabled="${count < 5}">
-                    <i class="bi bi-rocket-takeoff-fill me-2"></i>Lancer la Partie
-                </button>
-                <p class="text-muted small" th:if="${count < 5}">
-                    <i class="bi bi-info-circle me-1"></i>
-                    Encore <span th:text="${5 - count}">X</span> joueur(s) manquants
-                    (ajoutez des robots si besoin !)
-                </p>
-            </form>
+                <form method="post" th:action="@{|/room/${room.code}/start|}" class="flex-fill">
+                    <button
+                            class="btn btn-start w-100 h-100"
+                            type="submit"
+                            style="font-size: 1rem; padding: 0.65rem 1rem; border-radius: 12px;"
+                            th:disabled="${count < 5}">
+                        <i class="bi bi-rocket-takeoff-fill me-2"></i>Lancer la Partie
+                    </button>
+                </form>
+            </div>
+
+            <p class="text-muted small mt-2 mb-0" th:if="${!gameStarted && count < 5}">
+                <i class="bi bi-info-circle me-1"></i>
+                Encore <span th:text="${5 - count}">X</span> joueur(s) manquants
+                (ajoutez des robots si besoin !)
+            </p>
 
             <a class="btn btn-primary btn-enter w-100" th:href="@{|/game/${room.code}|}" th:if="${gameStarted}">
                 <i class="bi bi-arrow-right-circle-fill me-2"></i>Entrer dans le Jeu
@@ -474,7 +1087,6 @@
         });
 
         client.onConnect = function() {
-            // Any change to the room membership or game start -> refresh the page
             client.subscribe('/topic/room/' + roomCode, function() { location.reload(); });
         };
 
