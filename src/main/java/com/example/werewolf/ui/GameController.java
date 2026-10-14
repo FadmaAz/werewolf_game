@@ -67,6 +67,12 @@ public class GameController {
     model.addAttribute("phaseEndsAtMs", endsAtMs);
     model.addAttribute("serverNowMs", Instant.now().toEpochMilli());
 
+    boolean hasVoted = game.getPhase() == Phase.DAY_VOTE && gameService.hasVoted(game, myGp);
+    model.addAttribute("hasVoted", hasVoted);
+    var state = gameService.buildState(game);
+    model.addAttribute("aliveCount", state.aliveCount);
+    model.addAttribute("voteCount", state.voteCount);
+
     // For wolves UI: chosen targets
     if (game.getPhase() == Phase.NIGHT_WOLVES && myGp.isAlive() && myGp.getRole() == Role.WOLF) {
       Set<Long> chosen = gameService.getWolfChosenTargets(game);

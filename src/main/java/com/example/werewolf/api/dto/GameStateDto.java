@@ -12,5 +12,8 @@ public class GameStateDto {
   public String meRole;
   public boolean isAdmin;
 
+  public int aliveCount;
+  public int voteCount;
+
   public GameStateDto() {}
 }

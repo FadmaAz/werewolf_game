@@ -16,7 +16,6 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
 import java.util.List;
 
 @RestController
@@ -53,13 +52,7 @@ public class GameApiController {
 
       GamePlayer myGp = gameService.requireGamePlayer(game, me);
 
-      GameStateDto dto = new GameStateDto();
-      dto.roomCode = code;
-      dto.status = game.getStatus().name();
-      dto.phase = game.getPhase().name();
-      dto.dayNumber = game.getDayNumber();
-      dto.serverNowMs = Instant.now().toEpochMilli();
-      dto.phaseEndsAtMs = game.getPhaseEndsAt() == null ? 0L : game.getPhaseEndsAt().toEpochMilli();
+      GameStateDto dto = gameService.buildState(game);
       dto.meAlive = myGp.isAlive();
       dto.meRole = myGp.getRole().name();
       dto.isAdmin = game.getRoom().getAdmin().getId().equals(me.getId());

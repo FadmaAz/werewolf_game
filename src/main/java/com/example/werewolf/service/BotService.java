@@ -1,5 +1,6 @@
 package com.example.werewolf.service;
 
+import com.example.werewolf.api.dto.RoomUpdateDto;
 import com.example.werewolf.domain.*;
 import com.example.werewolf.domain.enums.*;
 import com.example.werewolf.repo.*;
@@ -47,6 +48,7 @@ public class BotService {
   private final DayVoteRepository voteRepo;
   private final ChatMessageRepository chatRepo;
   private final GameService gameService;
+  private final WebSocketPublisher publisher;
 
   private final SecureRandom rnd = new SecureRandom();
 
@@ -61,7 +63,8 @@ public class BotService {
                     NightActionRepository nightRepo,
                     DayVoteRepository voteRepo,
                     ChatMessageRepository chatRepo,
-                    GameService gameService) {
+                    GameService gameService,
+                    WebSocketPublisher publisher) {
     this.userRepo = userRepo;
     this.roomRepo = roomRepo;
     this.memberRepo = memberRepo;
@@ -71,6 +74,7 @@ public class BotService {
     this.voteRepo = voteRepo;
     this.chatRepo = chatRepo;
     this.gameService = gameService;
+    this.publisher = publisher;
   }
 
   // ---------------------- Add bot to room ----------------------
@@ -120,6 +124,13 @@ public class BotService {
       rm.setUser(bot);
       memberRepo.save(rm);
     }
+
+    RoomUpdateDto update = new RoomUpdateDto();
+    update.roomCode = room.getCode();
+    update.type = "ROOM_UPDATE";
+    update.playerCount = (int) memberRepo.countByRoom(room);
+    update.started = room.isStarted();
+    publisher.publishRoomUpdate(update);
   }
 
   // ---------------------- Scheduled bot actions ----------------------

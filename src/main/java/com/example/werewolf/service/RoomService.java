@@ -1,5 +1,6 @@
 package com.example.werewolf.service;
 
+import com.example.werewolf.api.dto.RoomUpdateDto;
 import com.example.werewolf.domain.Room;
 import com.example.werewolf.domain.RoomMember;
 import com.example.werewolf.domain.User;
@@ -14,11 +15,13 @@ import java.security.SecureRandom;
 public class RoomService {
   private final RoomRepository roomRepo;
   private final RoomMemberRepository memberRepo;
+  private final WebSocketPublisher publisher;
   private final SecureRandom rnd = new SecureRandom();
 
-  public RoomService(RoomRepository roomRepo, RoomMemberRepository memberRepo) {
+  public RoomService(RoomRepository roomRepo, RoomMemberRepository memberRepo, WebSocketPublisher publisher) {
     this.roomRepo = roomRepo;
     this.memberRepo = memberRepo;
+    this.publisher = publisher;
   }
 
   @Transactional
@@ -48,6 +51,13 @@ public class RoomService {
       rm.setRoom(r);
       rm.setUser(user);
       memberRepo.save(rm);
+
+      RoomUpdateDto update = new RoomUpdateDto();
+      update.roomCode = r.getCode();
+      update.type = "ROOM_UPDATE";
+      update.playerCount = (int) memberRepo.countByRoom(r);
+      update.started = r.isStarted();
+      publisher.publishRoomUpdate(update);
     }
     return r;
   }

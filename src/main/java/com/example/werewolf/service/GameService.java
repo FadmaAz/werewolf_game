@@ -1,5 +1,9 @@
 package com.example.werewolf.service;
 
+import com.example.werewolf.api.dto.ChatMessageDto;
+import com.example.werewolf.api.dto.GameEventDto;
+import com.example.werewolf.api.dto.GameStateDto;
+import com.example.werewolf.api.dto.RoomUpdateDto;
 import com.example.werewolf.config.PhaseDurationsProperties;
 import com.example.werewolf.domain.*;
 import com.example.werewolf.domain.enums.*;
@@ -24,6 +28,7 @@ public class GameService {
   private final ChatMessageRepository chatRepo;
   private final GameEventRepository eventRepo;
   private final PhaseDurationsProperties durations;
+  private final WebSocketPublisher publisher;
 
   private final SecureRandom rnd = new SecureRandom();
 
@@ -35,7 +40,8 @@ public class GameService {
                      DayVoteRepository voteRepo,
                      ChatMessageRepository chatRepo,
                      GameEventRepository eventRepo,
-                     PhaseDurationsProperties durations) {
+                     PhaseDurationsProperties durations,
+                     WebSocketPublisher publisher) {
     this.roomRepo = roomRepo;
     this.memberRepo = memberRepo;
     this.gameRepo = gameRepo;
@@ -45,6 +51,7 @@ public class GameService {
     this.chatRepo = chatRepo;
     this.eventRepo = eventRepo;
     this.durations = durations;
+    this.publisher = publisher;
   }
 
   // ---------------------- Room / Game access ----------------------
@@ -122,6 +129,9 @@ public class GameService {
     // wolves know other wolves
     revealWolvesToWolves(game);
 
+    publisher.publishRoomUpdate(buildRoomUpdate(room));
+    publishState(game);
+
     return game;
   }
 
@@ -160,6 +170,8 @@ public class GameService {
 
     Instant now = Instant.now();
     if (game.getPhaseEndsAt() != null && now.isAfter(game.getPhaseEndsAt())) {
+      Phase before = game.getPhase();
+      int dayBefore = game.getDayNumber();
       // phase timeout -> advance
       switch (game.getPhase()) {
         case NIGHT_WOLVES -> advanceFromWolves(game, true);
@@ -168,6 +180,9 @@ public class GameService {
         case DAY_CHAT -> advanceFromChat(game);
         case DAY_VOTE -> advanceFromVote(game);
         default -> {}
+      }
+      if (game.getPhase() != before || game.getDayNumber() != dayBefore) {
+        publishState(game);
       }
     }
     return game;
@@ -224,6 +239,8 @@ public class GameService {
     if (allWolvesActed(game)) {
       advanceFromWolves(game, false);
     }
+
+    publishState(game);
   }
 
   private boolean allWolvesActed(Game game) {
@@ -313,6 +330,7 @@ private void autoPickMissingWolfTargets(Game game) {
     addPrivateEvent(game, day, user, "🔮 Voyante: " + target.getUser().getUsername() + " est " + target.getRole());
 
     advanceFromSeer(game, false);
+    publishState(game);
   }
 
   @Transactional
@@ -380,6 +398,7 @@ private void autoPickMissingWolfTargets(Game game) {
     }
 
     advanceFromWitch(game, false);
+    publishState(game);
   }
 
   // ---------------------- Advance phases ----------------------
@@ -598,7 +617,9 @@ private void autoPickMissingWolfTargets(Game game) {
     cm.setDayNumber(game.getDayNumber());
     cm.setSender(user);
     cm.setMessage(m);
-    chatRepo.save(cm);
+    cm = chatRepo.save(cm);
+
+    publisher.publishChat(game.getRoom().getCode(), toChatDto(cm));
   }
 
   @Transactional
@@ -616,12 +637,24 @@ private void autoPickMissingWolfTargets(Game game) {
     if (target.getUser().getId().equals(user.getId())) throw new IllegalArgumentException("Vote invalide.");
 
     int day = game.getDayNumber();
-    DayVote v = voteRepo.findByGameAndDayNumberAndVoter(game, day, voter).orElseGet(DayVote::new);
+    DayVote existing = voteRepo.findByGameAndDayNumberAndVoter(game, day, voter).orElse(null);
+    if (existing != null) {
+      throw new IllegalArgumentException("Vous avez déjà voté ! Impossible de changer votre vote.");
+    }
+
+    DayVote v = new DayVote();
     v.setGame(game);
     v.setDayNumber(day);
     v.setVoter(voter);
     v.setTarget(target);
     voteRepo.save(v);
+
+    publishState(game);
+  }
+
+  public boolean hasVoted(Game game, GamePlayer voter) {
+    if (game == null || voter == null) return false;
+    return voteRepo.findByGameAndDayNumberAndVoter(game, game.getDayNumber(), voter).isPresent();
   }
 
   // ---------------------- Events helpers ----------------------
@@ -632,7 +665,8 @@ private void autoPickMissingWolfTargets(Game game) {
     e.setDayNumber(day);
     e.setVisibility(EventVisibility.PUBLIC);
     e.setMessage(msg);
-    eventRepo.save(e);
+    e = eventRepo.save(e);
+    publisher.publishEvent(game.getRoom().getCode(), toEventDto(e));
   }
 
   private void addPrivateEvent(Game game, int day, User recipient, String msg) {
@@ -642,7 +676,66 @@ private void autoPickMissingWolfTargets(Game game) {
     e.setVisibility(EventVisibility.PRIVATE);
     e.setRecipient(recipient);
     e.setMessage(msg);
-    eventRepo.save(e);
+    e = eventRepo.save(e);
+    publisher.publishPrivateEvent(String.valueOf(recipient.getId()), toEventDto(e));
+  }
+
+  // ---------------------- Push helpers ----------------------
+
+  /** Public, non user-specific snapshot of the game used for broadcasts. */
+  public GameStateDto buildState(Game game) {
+    GameStateDto dto = new GameStateDto();
+    dto.roomCode = game.getRoom().getCode();
+    dto.status = game.getStatus().name();
+    dto.phase = game.getPhase().name();
+    dto.dayNumber = game.getDayNumber();
+    dto.serverNowMs = Instant.now().toEpochMilli();
+    dto.phaseEndsAtMs = game.getPhaseEndsAt() == null ? 0L : game.getPhaseEndsAt().toEpochMilli();
+    dto.aliveCount = (int) gpRepo.countByGameAndAliveTrue(game);
+    dto.voteCount = game.getPhase() == Phase.DAY_VOTE
+      ? voteRepo.findByGameAndDayNumber(game, game.getDayNumber()).size() : 0;
+    return dto;
+  }
+
+  private void publishState(Game game) {
+    publisher.publishState(game.getRoom().getCode(), buildState(game));
+  }
+
+  /** Re-fetches the game inside a transaction, ticks it and broadcasts its state. */
+  @Transactional
+  public void syncState(String roomCode) {
+    Game game = gameRepo.findByRoom_Code(roomCode).orElse(null);
+    if (game == null) return;
+    tickIfNeeded(game);
+    publishState(game);
+  }
+
+  private GameEventDto toEventDto(GameEvent e) {
+    GameEventDto d = new GameEventDto();
+    d.id = e.getId();
+    d.message = e.getMessage();
+    d.isPrivate = e.getVisibility() == EventVisibility.PRIVATE;
+    d.createdAtMs = e.getCreatedAt().toEpochMilli();
+    return d;
+  }
+
+  private ChatMessageDto toChatDto(ChatMessage m) {
+    ChatMessageDto d = new ChatMessageDto();
+    d.id = m.getId();
+    d.username = m.getSender().getUsername();
+    d.avatar = m.getSender().getAvatar();
+    d.message = m.getMessage();
+    d.createdAtMs = m.getCreatedAt().toEpochMilli();
+    return d;
+  }
+
+  private RoomUpdateDto buildRoomUpdate(Room room) {
+    RoomUpdateDto d = new RoomUpdateDto();
+    d.roomCode = room.getCode();
+    d.type = "ROOM_UPDATE";
+    d.playerCount = (int) memberRepo.countByRoom(room);
+    d.started = room.isStarted();
+    return d;
   }
 
   private void revealWolvesToWolves(Game game) {

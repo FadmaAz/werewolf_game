@@ -302,56 +302,120 @@ body.is-day .toast .tBody { opacity: .95; }
     to { opacity: 0; transform: translateY(-8px); }
   }
 
-  /* Chat sidebar (desktop) */
+  /* Left sidebar: players list (desktop) */
   @media (min-width: 1100px) {
-    body.hasChatSidebar .container {
-      padding-right: 420px !important;
+    body.hasPlayersSidebar .container {
+      padding-left: 336px !important;
     }
-    #chatSidebar {
+    #playersSidebar {
       position: fixed;
       top: 76px;
-      right: 16px;
+      left: 16px;
       bottom: 16px;
-      width: 388px;
+      width: 304px;
       z-index: 6;
     }
-    #chatSidebar .card {
+    #playersSidebar .card {
       height: 100%;
       display: flex;
       flex-direction: column;
     }
-    #chatSidebar .chatBox {
+    #playersSidebar .playersGrid {
       flex: 1;
       min-height: 0;
-    }
-    #chatSidebar .row.mt {
-      margin-top: 10px !important;
+      overflow: auto;
     }
   }
-/* Events sidebar (desktop) — mirrors chat sidebar on the left */
-@media (min-width: 1100px) {
-  body.hasEventsSidebar .container {
-    padding-left: 420px !important;
+
+  /* Right sidebar: events + chat (desktop) */
+  @media (min-width: 1100px) {
+    body.hasRightSidebar .container {
+      padding-right: 440px !important;
+    }
+    #rightSidebar {
+      position: fixed;
+      top: 76px;
+      right: 16px;
+      bottom: 16px;
+      width: 408px;
+      z-index: 6;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #rightSidebar .card {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    #rightSidebar .eventsCard { flex: 1 1 auto; min-height: 0; }
+    #rightSidebar .chatCard { flex: 1 1 auto; min-height: 0; }
+    #rightSidebar .feed,
+    #rightSidebar .chatBox {
+      flex: 1;
+      min-height: 0;
+      max-height: none;
+      overflow: auto;
+    }
+    #rightSidebar .row.mt { margin-top: 10px !important; }
   }
-  #eventsSidebar {
-    position: fixed;
-    top: 76px;
-    left: 16px;
-    bottom: 16px;
-    width: 388px;
-    z-index: 6;
+
+  /* WebSocket connection indicator */
+  #wsStatus { font-size: 12px; }
+  #wsStatus.green {
+    background: rgba(16,185,129,.22) !important;
+    border-color: rgba(16,185,129,.55) !important;
+    color: #d1fae5 !important;
   }
-  #eventsSidebar .card {
-    height: 100%;
+  body.is-day #wsStatus.green { color: #065f46 !important; }
+  #wsStatus.red {
+    background: rgba(220,38,38,.22) !important;
+    border-color: rgba(220,38,38,.55) !important;
+    color: #fecaca !important;
+  }
+  body.is-day #wsStatus.red { color: #991b1b !important; }
+
+  /* Phase banner */
+  .phaseBanner {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin: 4px 0 14px;
+    padding: 12px 18px;
+    border-radius: 16px;
+    background: var(--glass-strong, rgba(255,255,255,.12));
+    border: 1px solid var(--stroke, rgba(255,255,255,.14));
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-soft);
+    animation: fadeInUp .3s ease both;
   }
-  #eventsSidebar .feed {
-    flex: 1;
-    min-height: 0;
-    max-height: none;
+  .phaseBannerIcon {
+    font-size: 30px;
+    line-height: 1;
+    animation: phasePulse 2.2s ease-in-out infinite;
   }
-}
+  .phaseBannerText { font-size: 20px; font-weight: 800; letter-spacing: .04em; }
+  .phaseBannerDay { margin-left: auto; opacity: .85; }
+  @keyframes phasePulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.14); }
+  }
+
+  /* Already voted badge */
+  .votedBadge {
+    display: inline-block;
+    margin: 4px 0 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    background: rgba(16,185,129,.18);
+    border: 1px solid rgba(16,185,129,.5);
+    color: #6ee7b7;
+  }
+  body.is-day .votedBadge {
+    color: #065f46;
+    background: rgba(16,185,129,.15);
+  }
 
 
   /* Small UX touches */
@@ -394,8 +458,15 @@ body.is-day .toast .tBody { opacity: .95; }
             <span class="pill" id="timerPill" th:if="${phaseEndsAtMs > 0}">
         ⏳ <span id="countdown">--</span>
       </span>
+            <span class="pill" id="wsStatus">🔴 Déconnecté</span>
             <button id="musicToggle" class="btn tiny secondary" type="button">🔊 Musique</button>
         </div>
+    </div>
+
+    <div class="phaseBanner" id="phaseBanner" th:attr="data-phase=${game.phase.name()}">
+        <span class="phaseBannerIcon" id="phaseBannerIcon">🌙</span>
+        <span class="phaseBannerText" th:text="${game.phase}">PHASE</span>
+        <span class="phaseBannerDay">Jour <b th:text="${game.dayNumber}"></b></span>
     </div>
 
     <p class="error" th:if="${error}" th:text="${error}"></p>
@@ -584,9 +655,12 @@ body.is-day .toast .tBody { opacity: .95; }
             <div class="card">
         <h2>🗳️ Vote</h2>
 <p class="muted">Si le temps se termine et que vous n'avez pas voté, votre vote est perdu.</p>
+<p class="muted" th:if="${myGp.alive}">Votes en cours: <b id="voteCounter" th:text="|${voteCount}/${aliveCount}|">0/0</b></p>
 
 <div th:if="${myGp.alive}">
-    <form method="post" th:action="@{|/game/${room.code}/vote|}">
+    <div th:if="${hasVoted}" class="votedBadge">✅ Vous avez voté — impossible de changer votre vote.</div>
+
+    <form method="post" th:action="@{|/game/${room.code}/vote|}" th:unless="${hasVoted}">
         <div class="pickGrid">
             <label class="pick" th:each="p : ${players}" th:if="${p.alive and p.id != myGp.id}">
                 <input type="radio" name="targetId" th:value="${p.id}" required/>
@@ -670,11 +744,17 @@ body.is-day .toast .tBody { opacity: .95; }
 
     window.WW = {
         roomCode: /*[[${room.code}]]*/ "XXXXXX",
+        myUserId: /*[[${me.id}]]*/ 0,
         phase: /*[[${game.phase.name()}]]*/ "LOBBY",
         phaseEndsAtMs: /*[[${phaseEndsAtMs}]]*/ 0,
-        serverNowMs: /*[[${serverNowMs}]]*/ 0
+        serverNowMs: /*[[${serverNowMs}]]*/ 0,
+        hasVoted: /*[[${hasVoted}]]*/ false,
+        voteCount: /*[[${voteCount}]]*/ 0,
+        aliveCount: /*[[${aliveCount}]]*/ 0
     };
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
 <script th:src="@{/js/game.js}"></script>
 <script id="game-upgrade-script">
 (function() {
@@ -793,32 +873,48 @@ body.is-day .toast .tBody { opacity: .95; }
       if (roleNameText) roleNameText.textContent = roleMap[role].name;
       if (roleDesc) roleDesc.textContent = roleMap[role].desc;
     }
+
+    // Phase banner icon
+    const bannerIcon = q("#phaseBannerIcon");
+    if (bannerIcon) {
+      const phaseIcons = {
+        NIGHT_WOLVES: "🐺",
+        NIGHT_SEER: "🔮",
+        NIGHT_WITCH: "🧙‍♀️",
+        DAY_CHAT: "💬",
+        DAY_VOTE: "🗳️",
+        FINISHED: "🏁"
+      };
+      bannerIcon.textContent = phaseIcons[phase] || (isNight ? "🌙" : "☀️");
+    }
 // Desktop sidebars (only on wide screens)
 const isWide = window.matchMedia("(min-width: 1100px)").matches;
 
-// Chat (discussion) -> right sidebar
-const chat = document.getElementById("chat");
-if (chat && isWide) {
-  const chatCard = chat.closest(".card");
-  if (chatCard) {
-    const sidebar = document.createElement("div");
-    sidebar.id = "chatSidebar";
-    sidebar.appendChild(chatCard);
-    document.body.appendChild(sidebar);
-    document.body.classList.add("hasChatSidebar");
+if (isWide) {
+  // Left sidebar: players list
+  const playersGrid = document.querySelector(".playersGrid");
+  const playersCard = playersGrid ? playersGrid.closest(".card") : null;
+  if (playersCard) {
+    const left = document.createElement("div");
+    left.id = "playersSidebar";
+    left.appendChild(playersCard);
+    document.body.appendChild(left);
+    document.body.classList.add("hasPlayersSidebar");
   }
-}
 
-// Events -> left sidebar (mirrors chat)
-const eventsEl = document.getElementById("events");
-if (eventsEl && isWide) {
-  const eventsCard = eventsEl.closest(".card");
-  if (eventsCard) {
-    const sidebar = document.createElement("div");
-    sidebar.id = "eventsSidebar";
-    sidebar.appendChild(eventsCard);
-    document.body.appendChild(sidebar);
-    document.body.classList.add("hasEventsSidebar");
+  // Right sidebar: events + chat stacked
+  const eventsElMoved = document.getElementById("events");
+  const chatElMoved = document.getElementById("chat");
+  const eventsCard = eventsElMoved ? eventsElMoved.closest(".card") : null;
+  const chatCard = chatElMoved ? chatElMoved.closest(".card") : null;
+
+  if (eventsCard || chatCard) {
+    const right = document.createElement("div");
+    right.id = "rightSidebar";
+    if (eventsCard) right.appendChild(eventsCard);
+    if (chatCard && chatCard !== eventsCard) right.appendChild(chatCard);
+    document.body.appendChild(right);
+    document.body.classList.add("hasRightSidebar");
   }
 }
 

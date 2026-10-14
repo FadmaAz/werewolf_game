@@ -423,6 +423,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
 <script>
     function copyRoomCode() {
         const roomCode = document.getElementById('roomCode').textContent;
@@ -441,13 +443,30 @@
             console.error('Failed to copy:', err);
         });
     }
+</script>
+<script th:inline="javascript">
+    (function() {
+        const roomCode = /*[[${room.code}]]*/ "XXXXXX";
+        const started = /*[[${gameStarted}]]*/ false;
 
-    // Auto-refresh every 3 seconds to check for new players or game start
-    setInterval(function() {
-        if (![[${gameStarted}]]) {
-            location.reload();
+        // Fallback: if the WebSocket libraries are unavailable, keep polling.
+        if (typeof SockJS === "undefined" || typeof StompJs === "undefined") {
+            setInterval(function() { if (!started) location.reload(); }, 3000);
+            return;
         }
-    }, 3000);
+
+        const client = new StompJs.Client({
+            webSocketFactory: () => new SockJS('/ws'),
+            reconnectDelay: 3000
+        });
+
+        client.onConnect = function() {
+            // Any change to the room membership or game start -> refresh the page
+            client.subscribe('/topic/room/' + roomCode, function() { location.reload(); });
+        };
+
+        client.activate();
+    })();
 </script>
 </body>
 </html>
