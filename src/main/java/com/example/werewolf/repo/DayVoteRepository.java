@@ -11,5 +11,6 @@ import java.util.Optional;
 public interface DayVoteRepository extends JpaRepository<DayVote, Long> {
   List<DayVote> findByGameAndDayNumber(Game game, int dayNumber);
   Optional<DayVote> findByGameAndDayNumberAndVoter(Game game, int dayNumber, GamePlayer voter);
+  long countByGameAndDayNumber(Game game, int dayNumber);
   void deleteByGameAndDayNumber(Game game, int dayNumber);
 }

@@ -649,6 +649,17 @@ private void autoPickMissingWolfTargets(Game game) {
     v.setTarget(target);
     voteRepo.save(v);
 
+    // If everyone alive has voted -> finish vote phase immediately
+    long alive = gpRepo.countByGameAndAliveTrue(game);
+    long voted = voteRepo.countByGameAndDayNumber(game, day);
+    if (voted >= alive) {
+      game.setPhaseEndsAt(Instant.now().minusSeconds(1));
+      gameRepo.save(game);
+      tickIfNeeded(game);
+      publishState(game);
+      return;
+    }
+
     publishState(game);
   }
 
