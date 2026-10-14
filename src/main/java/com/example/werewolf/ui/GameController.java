@@ -44,7 +44,7 @@ public class GameController {
   @GetMapping("/{code}")
   public String game(@PathVariable("code") String code, HttpSession session, Model model) {
     Long userId = (Long) session.getAttribute("USER_ID");
-    if (userId == null) return "redirect:/login";
+    if (userId == null) return "redirect:/";
     User me = userRepo.findById(userId).orElseThrow();
 
     Room room = roomRepo.findByCode(code).orElseThrow();
@@ -96,7 +96,7 @@ public class GameController {
                          HttpSession session,
                          RedirectAttributes ra) {
     Long userId = (Long) session.getAttribute("USER_ID");
-    if (userId == null) return "redirect:/login";
+    if (userId == null) return "redirect:/";
     User me = userRepo.findById(userId).orElseThrow();
     try {
       gameService.wolfKill(code, me, targetId);
@@ -113,7 +113,7 @@ public class GameController {
                           HttpSession session,
                           RedirectAttributes ra) {
     Long userId = (Long) session.getAttribute("USER_ID");
-    if (userId == null) return "redirect:/login";
+    if (userId == null) return "redirect:/";
     User me = userRepo.findById(userId).orElseThrow();
     try {
       gameService.seerCheck(code, me, targetId);
@@ -131,7 +131,7 @@ public class GameController {
                          HttpSession session,
                          RedirectAttributes ra) {
     Long userId = (Long) session.getAttribute("USER_ID");
-    if (userId == null) return "redirect:/login";
+    if (userId == null) return "redirect:/";
     User me = userRepo.findById(userId).orElseThrow();
     try {
       // empty strings may come -> handle null is fine
@@ -149,7 +149,7 @@ public class GameController {
                      HttpSession session,
                      RedirectAttributes ra) {
     Long userId = (Long) session.getAttribute("USER_ID");
-    if (userId == null) return "redirect:/login";
+    if (userId == null) return "redirect:/";
     User me = userRepo.findById(userId).orElseThrow();
     try {
       gameService.postChat(code, me, message);
@@ -166,7 +166,7 @@ public class GameController {
                      HttpSession session,
                      RedirectAttributes ra) {
     Long userId = (Long) session.getAttribute("USER_ID");
-    if (userId == null) return "redirect:/login";
+    if (userId == null) return "redirect:/";
     User me = userRepo.findById(userId).orElseThrow();
     try {
       gameService.vote(code, me, targetId);

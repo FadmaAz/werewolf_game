@@ -16,45 +16,19 @@ public class AuthController {
     this.authService = authService;
   }
 
-  @GetMapping("/login")
-  public String loginForm() {
-    return "login";
-  }
-
-  @PostMapping("/login")
-  public String login(@RequestParam("username") String username,
-                      @RequestParam("password") String password,
-                      HttpSession session,
-                      Model model) {
-    return authService.login(username, password)
-      .map(u -> {
-        session.setAttribute("USER_ID", u.getId());
-        return "redirect:/play";
-      })
-      .orElseGet(() -> {
-        model.addAttribute("error", "Identifiants invalides.");
-        return "login";
-      });
-  }
-
-  @GetMapping("/signup")
-  public String signupForm() {
-    return "signup";
-  }
-
-  @PostMapping("/signup")
-  public String signup(@RequestParam("username") String username,
-                       @RequestParam("password") String password,
-                       @RequestParam(value="avatar", required=false) String avatar,
-                       HttpSession session,
-                       Model model) {
+  /** POST /join → pseudo-only login or account creation */
+  @PostMapping("/join")
+  public String join(@RequestParam("username") String username,
+                     @RequestParam(value="avatar", required=false) String avatar,
+                     HttpSession session,
+                     Model model) {
     try {
-      User u = authService.register(username, password, avatar);
+      User u = authService.loginOrCreate(username, avatar);
       session.setAttribute("USER_ID", u.getId());
       return "redirect:/play";
     } catch (IllegalArgumentException ex) {
       model.addAttribute("error", ex.getMessage());
-      return "signup";
+      return "index";
     }
   }
 

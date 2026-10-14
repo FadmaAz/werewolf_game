@@ -350,6 +350,15 @@
                 <div class="player-card" th:each="m : ${members}">
                     <img class="avatar avatar-big" th:src="@{|/avatars/${m.user.avatar}|}" alt="avatar"/>
                     <div class="player-name" th:text="${m.user.username}">Player</div>
+                    <span th:if="${m.user.bot}" style="
+                        background: rgba(139,92,246,0.2);
+                        border: 1px solid rgba(139,92,246,0.5);
+                        color: #c4b5fd;
+                        font-size: 0.7rem;
+                        border-radius: 20px;
+                        padding: 2px 10px;
+                        margin-top: 4px;
+                        display:inline-block;">🤖 Robot</span>
                 </div>
             </div>
         </div>
@@ -359,6 +368,18 @@
     <div class="card" th:if="${isAdmin}">
         <div class="card-body text-center">
 
+            <!-- Add Bot button -->
+            <form method="post" th:action="@{|/room/${room.code}/addBot|}" th:if="${!gameStarted}" class="mb-3">
+                <button type="submit" class="btn w-100"
+                        th:disabled="${botCount >= 5}"
+                        style="background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.5);
+                               color: #c4b5fd; border-radius: 12px; padding: 0.65rem; font-weight: 600;
+                               transition: all 0.3s;">
+                    <i class="bi bi-robot me-2"></i>Ajouter un Robot 🤖
+                    <span style="color:#94a3b8;font-size:0.8rem;"
+                          th:text="|(${botCount}/5)|"></span>
+                </button>
+            </form>
 
             <form method="post" th:action="@{|/room/${room.code}/start|}" th:if="${!gameStarted}">
                 <button
@@ -369,7 +390,8 @@
                 </button>
                 <p class="text-muted small" th:if="${count < 5}">
                     <i class="bi bi-info-circle me-1"></i>
-                    Attendez au moins 5 joueurs pour commencer
+                    Encore <span th:text="${5 - count}">X</span> joueur(s) manquants
+                    (ajoutez des robots si besoin !)
                 </p>
             </form>
 

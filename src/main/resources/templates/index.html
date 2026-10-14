@@ -2,8 +2,9 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8"/>
-    <title>Loup-Garou - Accueil</title>
+    <title>Loup-Garou - Entrez votre pseudo</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content="Jeu multijoueur Loup-Garou en ligne. Entrez votre pseudo et jouez !"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -15,258 +16,262 @@
             background: linear-gradient(135deg, #0a0e1a 0%, #1a1432 50%, #0e1828 100%);
             color: #f1f5f9;
             font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             position: relative;
             overflow-x: hidden;
         }
-
         .animation-background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
             z-index: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
-
         .content-wrapper {
-            position: relative;
-            z-index: 1;
-            height: 100vh;
+            position: relative; z-index: 1;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             padding: 2rem 1rem;
+            gap: 2rem;
         }
-
         .hero-title {
             font-family: 'Creepster', cursive;
-            font-size: 3.5rem;
+            font-size: 4rem;
             color: #ef4444;
-            text-shadow: 0 0 30px rgba(220, 38, 38, 0.8),
-                         0 0 60px rgba(220, 38, 38, 0.5),
-                         0 4px 20px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 0 30px rgba(220,38,38,0.8), 0 0 60px rgba(220,38,38,0.5);
             margin: 0;
-            padding-top: 1rem;
             animation: pulse 3s ease-in-out infinite;
             letter-spacing: 0.05em;
+            text-align: center;
         }
-
+        .hero-sub {
+            color: #94a3b8;
+            font-size: 1rem;
+            text-align: center;
+            margin-top: -1rem;
+        }
         @keyframes pulse {
-            0%, 100% {
-                text-shadow: 0 0 30px rgba(220, 38, 38, 0.8),
-                             0 0 60px rgba(220, 38, 38, 0.5),
-                             0 4px 20px rgba(0, 0, 0, 0.5);
-            }
-            50% {
-                text-shadow: 0 0 40px rgba(220, 38, 38, 1),
-                             0 0 80px rgba(220, 38, 38, 0.7),
-                             0 4px 20px rgba(0, 0, 0, 0.5);
-            }
+            0%,100% { text-shadow: 0 0 30px rgba(220,38,38,0.8), 0 0 60px rgba(220,38,38,0.5); }
+            50%      { text-shadow: 0 0 50px rgba(220,38,38,1),   0 0 90px rgba(220,38,38,0.7); }
         }
-
-        .buttons-container {
-            width: 100%;
-            max-width: 600px;
-            padding-bottom: 1rem;
-            backdrop-filter: blur(10px);
-            background: rgba(0, 0, 0, 0.3);
+        .card-join {
+            width: 100%; max-width: 480px;
+            background: rgba(15,20,40,0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 24px;
-            padding: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
-                        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-        }
-
-        .btn-play {
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-            border: none;
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 1.5rem;
-            padding: 1rem 3rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.4),
-                        0 0 40px rgba(220, 38, 38, 0.2);
-            position: relative;
-            overflow: hidden;
-            border-radius: 16px;
-        }
-
-        .btn-play::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.6s;
-        }
-
-        .btn-play:hover::before {
-            left: 100%;
-        }
-
-        .btn-play:hover {
-            transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 12px 40px rgba(220, 38, 38, 0.6),
-                        0 0 60px rgba(220, 38, 38, 0.4);
-            color: #ffffff;
-        }
-
-        .btn-play:active {
-            transform: translateY(-2px) scale(1.02);
-        }
-
-        .btn-outline-light {
-            color: #f1f5f9;
-            border: 2px solid #64748b;
-            background: rgba(100, 116, 139, 0.1);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-            border-radius: 14px;
-            padding: 0.6rem 1.5rem;
-            font-weight: 600;
-        }
-
-        .btn-outline-light:hover {
-            background: linear-gradient(135deg, #475569 0%, #334155 100%);
-            border-color: #94a3b8;
-            color: #ffffff;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(71, 85, 105, 0.4);
-        }
-
-        .btn-outline-danger {
-            color: #fca5a5;
-            border: 2px solid #dc2626;
-            background: rgba(220, 38, 38, 0.1);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-            border-radius: 14px;
-            padding: 0.6rem 1.5rem;
-            font-weight: 600;
-        }
-
-        .btn-outline-danger:hover {
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-            border-color: #ef4444;
-            color: #ffffff;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
-        }
-
-        .avatar {
-            border-radius: 50%;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
-        }
-
-        .avatar:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 25px rgba(220, 38, 38, 0.6);
-        }
-
-        small {
-            color: #94a3b8 !important;
-        }
-
-        .d-flex.align-items-center.justify-content-between {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 1rem;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .d-flex.align-items-center.justify-content-between:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2.5rem;
-            }
-
-            .btn-play {
-                font-size: 1.25rem;
-                padding: 0.875rem 2rem;
-            }
-
-            .buttons-container {
-                padding: 1.5rem;
-            }
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0px);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-
-        .buttons-container {
+            padding: 2.5rem 2rem;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset;
             animation: float 4s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%,100% { transform: translateY(0); }
+            50%      { transform: translateY(-8px); }
+        }
+        .card-join h2 {
+            font-size: 1.3rem; font-weight: 700;
+            color: #f1f5f9; margin-bottom: 1.5rem; text-align: center;
+        }
+        .form-control-dark {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #f1f5f9;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .form-control-dark:focus {
+            background: rgba(255,255,255,0.1);
+            border-color: #dc2626;
+            color: #f1f5f9;
+            box-shadow: 0 0 0 3px rgba(220,38,38,0.25);
+            outline: none;
+        }
+        .form-label { color: #cbd5e1; font-weight: 600; margin-bottom: 0.4rem; }
+        /* Avatar grid */
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.6rem;
+            margin-top: 0.5rem;
+        }
+        .avatar-option { display: none; }
+        .avatar-option + label {
+            cursor: pointer;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            transition: all 0.25s;
+            display: block;
+            overflow: hidden;
+        }
+        .avatar-option + label img {
+            width: 100%; height: auto;
+            display: block;
+            border-radius: 50%;
+            transition: transform 0.25s;
+        }
+        .avatar-option + label:hover img { transform: scale(1.1); }
+        .avatar-option:checked + label {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 2px rgba(239,68,68,0.5), 0 4px 15px rgba(220,38,38,0.4);
+        }
+        .btn-join {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border: none; color: #fff;
+            font-weight: 700; font-size: 1.15rem;
+            padding: 0.85rem 2rem;
+            border-radius: 14px;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(220,38,38,0.4);
+            position: relative; overflow: hidden;
+        }
+        .btn-join::before {
+            content: '';
+            position: absolute; top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            transition: left 0.5s;
+        }
+        .btn-join:hover::before { left: 100%; }
+        .btn-join:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(220,38,38,0.6);
+            color: #fff;
+        }
+        .user-card {
+            display: flex; align-items: center; gap: 1rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 1rem 1.5rem;
+        }
+        .user-card img { width: 56px; height: 56px; border-radius: 50%; border: 3px solid #dc2626; }
+        .btn-play-big {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border: none; color: #fff;
+            font-weight: 700; font-size: 1.3rem;
+            padding: 0.9rem 2.5rem;
+            border-radius: 14px;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(220,38,38,0.4);
+            display: block; text-align: center; text-decoration: none;
+            width: 100%; margin-top: 1rem;
+        }
+        .btn-play-big:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(220,38,38,0.6);
+            color: #fff;
+        }
+        .btn-logout {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #94a3b8; border-radius: 10px;
+            padding: 0.4rem 1rem; font-size: 0.85rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-logout:hover { background: rgba(220,38,38,0.2); color: #fca5a5; border-color: #dc2626; }
+        .alert-danger-dark {
+            background: rgba(220,38,38,0.15);
+            border: 1px solid rgba(220,38,38,0.4);
+            color: #fca5a5; border-radius: 10px;
+            padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.9rem;
+        }
+        @media (max-width: 480px) {
+            .hero-title { font-size: 2.8rem; }
+            .avatar-grid { grid-template-columns: repeat(5, 1fr); gap: 0.4rem; }
         }
     </style>
 </head>
 <body>
-<!-- Animation Background -->
+<!-- Animated Background -->
 <div class="animation-background">
     <dotlottie-wc
-            src="https://lottie.host/1ba847e1-f1ae-4777-858e-68d8ca042097/GPZpu9dqs6.lottie"
-            speed="1"
-            style="width: 150%; height: 150%; min-width: 100vw; min-height: 100vh; background-color: #10182c"
-            mode="forward"
-            loop
-            autoplay>
+        src="https://lottie.host/1ba847e1-f1ae-4777-858e-68d8ca042097/GPZpu9dqs6.lottie"
+        speed="1"
+        style="width:100%;height:100%;background-color:#10182c"
+        mode="forward" loop autoplay>
     </dotlottie-wc>
 </div>
 
-<!-- Content -->
 <div class="content-wrapper">
-    <h1 class="hero-title">Loup-Garou</h1>
+    <div>
+        <h1 class="hero-title">🐺 Loup-Garou</h1>
+        <p class="hero-sub">Le jeu de rôles multijoueur</p>
+    </div>
 
-    <div class="buttons-container">
-        <div class="d-flex justify-content-center mb-4">
-            <a class="btn btn-primary btn-play" th:href="@{/play}">
-                <i class="bi bi-controller me-2"></i>Jouer Maintenant
-            </a>
-        </div>
-
-        <div th:if="${me == null}" class="d-flex gap-3 justify-content-center flex-wrap">
-            <a class="btn btn-outline-light" th:href="@{/login}">
-                <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
-            </a>
-            <a class="btn btn-outline-light" th:href="@{/signup}">
-                <i class="bi bi-person-plus me-2"></i>S'inscrire
-            </a>
-        </div>
-
-        <div th:if="${me != null}" class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-            <div class="d-flex align-items-center">
-                <img class="avatar me-3" th:src="@{|/avatars/${me.avatar}|}" alt="avatar"
-                     style="width: 60px; height: 60px; border: 3px solid #dc2626;"/>
-                <div class="text-start">
-                    <div class="fw-bold fs-5" th:text="${me.username}">Username</div>
-                    <small class="text-muted">Connecté</small>
-                </div>
+    <!-- === ALREADY LOGGED IN === -->
+    <div th:if="${me != null}" class="card-join">
+        <h2>Bienvenue, <span th:text="${me.username}" style="color:#ef4444">Joueur</span> ! 👋</h2>
+        <div class="user-card mb-3">
+            <img th:src="@{|/avatars/${me.avatar}|}" alt="avatar"/>
+            <div>
+                <div class="fw-bold fs-5" th:text="${me.username}">Pseudo</div>
+                <div style="color:#94a3b8;font-size:0.85rem">Prêt à jouer</div>
             </div>
-            <form method="post" th:action="@{/logout}">
-                <button class="btn btn-outline-danger" type="submit">
-                    <i class="bi bi-box-arrow-right me-2"></i>Déconnexion
+            <form method="post" th:action="@{/logout}" class="ms-auto">
+                <button type="submit" class="btn-logout">
+                    <i class="bi bi-box-arrow-right"></i> Changer
                 </button>
             </form>
         </div>
+        <a th:href="@{/play}" class="btn-play-big">
+            <i class="bi bi-controller me-2"></i>Jouer Maintenant
+        </a>
+    </div>
+
+    <!-- === NOT LOGGED IN → PSEUDO FORM === -->
+    <div th:if="${me == null}" class="card-join">
+        <h2>🎮 Entrez votre pseudo</h2>
+
+        <!-- Error message -->
+        <div th:if="${error}" class="alert-danger-dark">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${error}">Erreur</span>
+        </div>
+
+        <form method="post" th:action="@{/join}">
+            <!-- Pseudo -->
+            <div class="mb-4">
+                <label class="form-label" for="username">
+                    <i class="bi bi-person-fill me-1"></i>Votre pseudo
+                </label>
+                <input id="username" type="text" name="username"
+                       class="form-control form-control-dark"
+                       placeholder="ex: LoupDuSoir"
+                       minlength="3" maxlength="20"
+                       autocomplete="off"
+                       required
+                       th:value="${param.username}"/>
+                <div style="color:#64748b;font-size:0.78rem;margin-top:0.3rem">
+                    Entre 3 et 20 caractères. Si le pseudo existe → reconnexion automatique.
+                </div>
+            </div>
+
+            <!-- Avatar selection -->
+            <div class="mb-4">
+                <label class="form-label">
+                    <i class="bi bi-image me-1"></i>Choisissez votre avatar
+                </label>
+                <div class="avatar-grid">
+                    <th:block th:each="i : ${#numbers.sequence(1, 10)}">
+                        <input type="radio" name="avatar"
+                               th:id="|av${i}|"
+                               th:value="|avatar${i}.png|"
+                               class="avatar-option"
+                               th:checked="${i == 1}"/>
+                        <label th:for="|av${i}|">
+                            <img th:src="@{|/avatars/avatar${i}.png|}" th:alt="|Avatar ${i}|"/>
+                        </label>
+                    </th:block>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-join">
+                <i class="bi bi-arrow-right-circle-fill me-2"></i>Entrer dans le village
+            </button>
+        </form>
     </div>
 </div>
 

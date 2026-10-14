@@ -27,7 +27,7 @@ public class HomeController {
   @GetMapping("/play")
   public String play(HttpSession session, Model model) {
     Long userId = (Long) session.getAttribute("USER_ID");
-    if (userId == null) return "redirect:/login";
+    if (userId == null) return "redirect:/";
     User me = userRepo.findById(userId).orElse(null);
     model.addAttribute("me", me);
 

@@ -2,41 +2,39 @@ package com.example.werewolf.service;
 
 import com.example.werewolf.domain.User;
 import com.example.werewolf.repo.UserRepository;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
   private final UserRepository userRepo;
-  private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
   public AuthService(UserRepository userRepo) {
     this.userRepo = userRepo;
   }
 
-  public User register(String username, String rawPassword, String avatar) {
+  /**
+   * Login or create a user by pseudo only (no password).
+   * If the username already exists → returns existing user.
+   * If not → creates a new user with the given avatar.
+   */
+  @Transactional
+  public User loginOrCreate(String username, String avatar) {
     if (username == null || username.isBlank() || username.trim().length() < 3) {
-      throw new IllegalArgumentException("Username doit contenir au moins 3 caractères.");
+      throw new IllegalArgumentException("Le pseudo doit contenir au moins 3 caractères.");
     }
-    if (rawPassword == null || rawPassword.length() < 4) {
-      throw new IllegalArgumentException("Mot de passe doit contenir au moins 4 caractères.");
+    if (username.trim().length() > 20) {
+      throw new IllegalArgumentException("Le pseudo ne peut pas dépasser 20 caractères.");
     }
-    userRepo.findByUsernameIgnoreCase(username.trim()).ifPresent(u -> {
-      throw new IllegalArgumentException("Username déjà utilisé.");
+    String cleanName = username.trim();
+    String cleanAvatar = (avatar == null || avatar.isBlank()) ? "avatar1.png" : avatar.trim();
+
+    return userRepo.findByUsernameIgnoreCase(cleanName).orElseGet(() -> {
+      User u = new User();
+      u.setUsername(cleanName);
+      u.setAvatar(cleanAvatar);
+      u.setBot(false);
+      return userRepo.save(u);
     });
-
-    User u = new User();
-    u.setUsername(username.trim());
-    u.setPasswordHash(encoder.encode(rawPassword));
-    u.setAvatar((avatar == null || avatar.isBlank()) ? "avatar1.png" : avatar.trim());
-    return userRepo.save(u);
-  }
-
-  public Optional<User> login(String username, String rawPassword) {
-    if (username == null || rawPassword == null) return Optional.empty();
-    return userRepo.findByUsernameIgnoreCase(username.trim())
-      .filter(u -> encoder.matches(rawPassword, u.getPasswordHash()));
   }
 }

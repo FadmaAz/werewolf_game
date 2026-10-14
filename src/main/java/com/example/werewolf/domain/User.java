@@ -12,11 +12,11 @@ public class User {
   @Column(nullable=false, length=30)
   private String username;
 
-  @Column(nullable=false, length=200)
-  private String passwordHash;
-
   @Column(nullable=false, length=100)
   private String avatar = "avatar1.png";
+
+  @Column(nullable=false)
+  private boolean bot = false;
 
   @Column(nullable=false)
   private Instant createdAt = Instant.now();
@@ -24,9 +24,9 @@ public class User {
   public Long getId() { return id; }
   public String getUsername() { return username; }
   public void setUsername(String username) { this.username = username; }
-  public String getPasswordHash() { return passwordHash; }
-  public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
   public String getAvatar() { return avatar; }
   public void setAvatar(String avatar) { this.avatar = avatar; }
+  public boolean isBot() { return bot; }
+  public void setBot(boolean bot) { this.bot = bot; }
   public Instant getCreatedAt() { return createdAt; }
 }
