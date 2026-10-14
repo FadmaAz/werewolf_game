@@ -1,1036 +1,1055 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:thym="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8"/>
-    <title>Jeu</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <link rel="stylesheet" th:href="@{/css/app.css}">
-  <link rel="preconnect" href="https://api.iconify.design">
-<style id="game-upgrade-styles">
-  /* ===== Gameplay UX upgrade (game.html only) ===== */
-  :root {
-    --glass: rgba(255,255,255,.08);
-    --glass-strong: rgba(255,255,255,.12);
-    --stroke: rgba(255,255,255,.14);
-    --shadow: 0 18px 60px rgba(0,0,0,.35);
-    --shadow-soft: 0 10px 30px rgba(0,0,0,.25);
-    --night-accent: rgba(115, 146, 255, .85);
-    --day-accent: rgba(255, 212, 86, .9);
-  }
-/* -------- Day/Night readability (day = black text, night = white text) -------- */
-body.is-day {
-  --text: #0b1020;
-  --muted: rgba(11,16,32,.68);
-  --border: rgba(0,0,0,.14);
+  <meta charset="utf-8"/>
+  <title th:text="|Loup-Garou — ${room.code}|">Loup-Garou</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
-  --glass: rgba(255,255,255,.50);
-  --glass-strong: rgba(255,255,255,.72);
-  --stroke: rgba(0,0,0,.10);
-  --shadow: 0 18px 60px rgba(0,0,0,.20);
-  --shadow-soft: 0 10px 30px rgba(0,0,0,.16);
-}
-body.is-night {
-  --text: #f3f5ff;
-  --muted: rgba(255,255,255,.68);
-  --border: rgba(255,255,255,.12);
+<style>
+/* ═══════════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #07090f;
+  --surface:  rgba(255,255,255,.055);
+  --surface2: rgba(255,255,255,.09);
+  --border:   rgba(255,255,255,.10);
+  --text:     #e8eaf6;
+  --muted:    rgba(232,234,246,.55);
+  --crimson:  #dc143c;
+  --gold:     #f5a623;
+  --purple:   #9b59ff;
+  --emerald:  #10b981;
+  --red:      #ef4444;
+  --font-title: 'Cinzel', serif;
+  --font-body:  'Inter', sans-serif;
+  --r: 14px;
+  --r-sm: 9px;
 }
 
-/* Panels that were dark in app.css -> make them light during day */
-body.is-day .feed,
-body.is-day .chatBox,
-body.is-day .msg .bubble,
-body.is-day .nightWait,
-body.is-day input,
-body.is-day select,
-body.is-day .pill:not(.green):not(.red) {
-  background: rgba(255,255,255,.72) !important;
-  border-color: rgba(0,0,0,.12) !important;
-  color: var(--text) !important;
-}
-body.is-day input::placeholder { color: rgba(11,16,32,.55) !important; }
-body.is-day .msg .meta { color: var(--muted) !important; }
-
-/* Toasts readable in day mode */
-body.is-day .toast {
-  background: rgba(255,255,255,.82);
-  border-color: rgba(0,0,0,.12);
+html, body {
+  height: 100%; width: 100%;
+  overflow: hidden;
+  background: var(--bg);
   color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.45;
 }
-body.is-day .toast.private { background: rgba(234, 242, 255, .90); border-color: rgba(115,146,255,.38); }
-body.is-day .toast.day { background: rgba(255, 247, 223, .92); border-color: rgba(255,212,86,.46); }
-body.is-day .toast .tBody { opacity: .95; }
 
-/* Larger text for readability */
-.feed, .chatBox { font-size: 16px; line-height: 1.35; }
-.msg .bubble { font-size: 15.5px; line-height: 1.35; }
+/* ═══════════════════════════════════════════════════
+   ATMOSPHERIC BACKGROUND
+═══════════════════════════════════════════════════ */
+#atmo {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  transition: background 1.2s ease;
+}
+body.is-night #atmo {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(60,40,120,.55), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 90% 10%, rgba(100,20,60,.3), transparent 60%),
+    linear-gradient(180deg, #060814 0%, #0b0f22 60%, #07090f 100%);
+}
+body.is-day #atmo {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(250,200,80,.25), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 90% 5%, rgba(255,160,50,.18), transparent 60%),
+    linear-gradient(180deg, #101520 0%, #0d1025 60%, #07090f 100%);
+}
 
-/* Events panel */
-.eventsFeed { font-weight: 500; }
-.pill.tiny { padding: 6px 10px; border-radius: 999px; font-size: 12px; }
-.eventsCard .eventsHeader { align-items: center; justify-content: space-between; }
-.eventsCard .eventsHeader h2 { margin: 0; }
-.eventsCard .eventsHint { margin: 6px 0 10px; }
+/* Fog overlay */
+#atmo::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+  opacity: .4;
+  mix-blend-mode: overlay;
+}
 
+/* ═══════════════════════════════════════════════════
+   GRID LAYOUT — 3 COLUMNS
+═══════════════════════════════════════════════════ */
+#shell {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-rows: 52px 1fr;
+  grid-template-columns: 240px 1fr 320px;
+  grid-template-areas:
+    "topbar topbar topbar"
+    "left   center right";
+  height: 100vh;
+  gap: 0;
+  padding: 0;
+}
 
-  html, body {
-    height: 100%;
-  }
+/* ═══════════════════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════════════════ */
+#topbar {
+  grid-area: topbar;
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 16px;
+  background: rgba(7,9,15,.85);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+#topbar .logo {
+  font-family: var(--font-title);
+  font-size: 16px;
+  color: var(--crimson);
+  letter-spacing: .06em;
+  text-shadow: 0 0 18px rgba(220,20,60,.6);
+  margin-right: 4px;
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+.chip.night { border-color: rgba(155,89,255,.4); color: #c4b5fd; }
+.chip.day   { border-color: rgba(245,166,35,.4);  color: #fde68a; }
+.chip.wolf  { border-color: rgba(220,20,60,.4);   color: #fca5a5; }
+.chip.emerald{ border-color: rgba(16,185,129,.4); color: #6ee7b7; }
 
-  body.ww {
-    background: transparent !important;
-    overflow-x: hidden;
-  }
+#countdown-chip { font-size: 13px; font-weight: 700; }
+#wsChip { font-size: 11px; }
 
-  /* Full-screen container */
-  .container {
-    width: 100% !important;
-    max-width: none !important;
-    padding: 16px 18px 28px !important;
-    position: relative;
-    z-index: 1;
-  }
+.spacer { flex: 1; }
 
-  /* Ambient background layers */
-  #ambientBg {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    overflow: hidden;
-    pointer-events: none;
-  }
-  #ambientBg .bgLayer {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transition: opacity 650ms ease;
-  }
-  body.is-day #bgDay { opacity: 1; }
-  body.is-night #bgNight { opacity: 1; }
+#topbar button {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--muted); border-radius: 8px; padding: 4px 10px;
+  font-size: 11px; cursor: pointer; transition: all .2s;
+}
+#topbar button:hover { background: var(--surface2); color: var(--text); }
 
-  #bgDay {
-    background:
-      radial-gradient(1000px 700px at 25% 0%, rgba(255,255,255,.35), rgba(255,255,255,0) 60%),
-      radial-gradient(900px 600px at 85% 20%, rgba(255,236,168,.35), rgba(255,255,255,0) 60%),
-      linear-gradient(180deg, #6ec6ff 0%, #b3e5fc 35%, #e3f2fd 100%);
-  }
+/* ═══════════════════════════════════════════════════
+   LEFT PANEL — PLAYERS
+═══════════════════════════════════════════════════ */
+#left {
+  grid-area: left;
+  border-right: 1px solid var(--border);
+  background: rgba(7,9,15,.6);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+#left .panel-title {
+  padding: 14px 14px 10px;
+  font-family: var(--font-title); font-size: 13px;
+  letter-spacing: .1em; color: var(--muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+#playersList {
+  flex: 1; overflow-y: auto; padding: 10px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+#playersList::-webkit-scrollbar { width: 4px; }
+#playersList::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-  #bgNight {
-    background:
-      radial-gradient(900px 650px at 30% -10%, rgba(120,140,255,.25), rgba(0,0,0,0) 55%),
-      radial-gradient(900px 650px at 70% 0%, rgba(0, 255, 221, .10), rgba(0,0,0,0) 55%),
-      linear-gradient(180deg, #070B1F 0%, #0A1240 55%, #0B163D 100%);
-  }
+.pcard {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  background: var(--surface);
+  transition: all .25s;
+  position: relative;
+}
+.pcard.alive { border-color: rgba(255,255,255,.07); }
+.pcard.dead  { opacity: .45; filter: grayscale(.8); border-color: rgba(239,68,68,.2); }
+.pcard.me    { border-color: rgba(155,89,255,.4); background: rgba(155,89,255,.08); }
 
-  .bgSun, .bgMoon {
-    position: absolute;
-    width: 140px;
-    height: 140px;
-    filter: drop-shadow(0 12px 26px rgba(0,0,0,.35));
-    opacity: .95;
-    animation: floaty 6s ease-in-out infinite;
-  }
-  .bgSun { top: 52px; left: 48px; }
-  .bgMoon { top: 52px; right: 56px; width: 120px; height: 120px; animation-duration: 7.5s; }
+.pcard .av {
+  width: 36px; height: 36px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0;
+  border: 2px solid transparent;
+  transition: border-color .25s;
+}
+.pcard.alive .av { border-color: rgba(16,185,129,.5); }
+.pcard.dead  .av { border-color: rgba(239,68,68,.4); }
+.pcard.me    .av { border-color: rgba(155,89,255,.7); }
 
-  @keyframes floaty {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
+.pcard .pname { font-weight: 600; font-size: 13px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pcard .pstatus { font-size: 10px; color: var(--muted); }
+.pcard .skull { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 14px; opacity: .7; }
 
-  /* Stars (night) */
-  #bgNight .stars {
-    position: absolute; inset: 0;
-    background-image:
-      radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,.95) 45%, rgba(255,255,255,0) 55%),
-      radial-gradient(1.5px 1.5px at 22% 74%, rgba(255,255,255,.7) 45%, rgba(255,255,255,0) 55%),
-      radial-gradient(1px 1px at 35% 45%, rgba(255,255,255,.85) 45%, rgba(255,255,255,0) 55%),
-      radial-gradient(1.5px 1.5px at 58% 24%, rgba(255,255,255,.8) 45%, rgba(255,255,255,0) 55%),
-      radial-gradient(2px 2px at 78% 54%, rgba(255,255,255,.9) 45%, rgba(255,255,255,0) 55%),
-      radial-gradient(1px 1px at 90% 14%, rgba(255,255,255,.65) 45%, rgba(255,255,255,0) 55%),
-      radial-gradient(1.5px 1.5px at 88% 82%, rgba(255,255,255,.8) 45%, rgba(255,255,255,0) 55%);
-    animation: twinkle 2.8s ease-in-out infinite;
-    opacity: .85;
-  }
-  @keyframes twinkle {
-    0%,100% { opacity: .65; filter: blur(0px); }
-    50% { opacity: 1; filter: blur(.3px); }
-  }
+/* My role badge in left */
+#myRole {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.role-badge {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--r-sm);
+  background: rgba(155,89,255,.1); border: 1px solid rgba(155,89,255,.3);
+}
+.role-badge .role-icon { font-size: 26px; line-height: 1; }
+.role-badge .role-name {
+  font-family: var(--font-title); font-size: 14px;
+  letter-spacing: .05em; color: #c4b5fd;
+}
+.role-badge .role-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-  /* Birds (day) */
-  #bgDay .bird {
-    position: absolute;
-    width: 34px;
-    height: 34px;
-    opacity: .65;
-    filter: drop-shadow(0 10px 18px rgba(0,0,0,.25));
-    animation: flyAcross 16s linear infinite;
-  }
-  #bgDay .bird.b1 { top: 18%; left: -60px; animation-delay: 0s; }
-  #bgDay .bird.b2 { top: 28%; left: -80px; animation-delay: 5s; transform: scale(.9); }
-  #bgDay .bird.b3 { top: 14%; left: -90px; animation-delay: 9s; transform: scale(1.05); }
-  @keyframes flyAcross {
-    from { transform: translateX(0) scale(1); }
-    to { transform: translateX(calc(100vw + 160px)) scale(1); }
-  }
+/* ═══════════════════════════════════════════════════
+   CENTER — MAIN ACTION
+═══════════════════════════════════════════════════ */
+#center {
+  grid-area: center;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
 
-  /* Cards polish */
-  .card {
-    background: var(--glass) !important;
-    border: 1px solid var(--stroke) !important;
-    backdrop-filter: blur(10px);
-    box-shadow: var(--shadow-soft);
-    animation: fadeInUp .28s ease both;
-  }
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .topbar {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    background: linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,0));
-    padding-top: 8px;
-    padding-bottom: 10px;
-    backdrop-filter: blur(8px);
-  }
-  .pill {
-    background: rgba(0,0,0,.18) !important;
-    border: 1px solid rgba(255,255,255,.14) !important;
-  }
+/* Phase hero banner */
+#phaseHero {
+  padding: 18px 20px 14px;
+  display: flex; align-items: center; gap: 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+#phaseEmoji { font-size: 36px; animation: pulse 2.5s ease-in-out infinite; flex-shrink: 0; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+#phaseTitle {
+  font-family: var(--font-title);
+  font-size: 20px; letter-spacing: .04em;
+  text-shadow: 0 2px 16px rgba(0,0,0,.5);
+}
+#phaseSubtitle { font-size: 12px; color: var(--muted); margin-top: 3px; }
+#phaseHero .timer-big {
+  margin-left: auto;
+  font-family: var(--font-title); font-size: 28px; font-weight: 900;
+  color: var(--gold);
+  text-shadow: 0 0 20px rgba(245,166,35,.4);
+  min-width: 60px; text-align: right;
+  flex-shrink: 0;
+}
 
-  /* Role showcase */
-  .roleShowcase {
-    display: grid;
-    grid-template-columns: 110px 1fr;
-    gap: 14px;
-    align-items: center;
-  }
-  .roleShowcase .roleArt {
-    width: 110px; height: 110px;
-    border-radius: 18px;
-    background: rgba(0,0,0,.18);
-    border: 1px solid rgba(255,255,255,.12);
-    display: grid;
-    place-items: center;
-    overflow: hidden;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
-  }
-  .roleShowcase img {
-    width: 78px; height: 78px;
-    animation: roleBob 4.5s ease-in-out infinite;
-  }
-  @keyframes roleBob {
-    0%,100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-6px) rotate(-2deg); }
-  }
-  .roleShowcase .kicker {
-    font-size: 12px;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    opacity: .8;
-  }
-  .roleShowcase .roleName {
-    font-size: 22px;
-    font-weight: 800;
-    margin-top: 2px;
-  }
-  .roleShowcase .roleDesc {
-    margin-top: 6px;
-    opacity: .9;
-    line-height: 1.35;
-  }
+/* Action area */
+#actionArea {
+  flex: 1; overflow-y: auto; padding: 16px 20px;
+}
+#actionArea::-webkit-scrollbar { width: 4px; }
+#actionArea::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-  /* Toasts */
-  #toastStack {
-    position: fixed;
-    top: 14px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 9999;
-    display: grid;
-    gap: 10px;
-    width: min(820px, calc(100vw - 28px));
-    pointer-events: none;
-  }
-  .toast {
-    pointer-events: none;
-    padding: 12px 14px;
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,.18);
-    background: rgba(0,0,0,.38);
-    backdrop-filter: blur(10px);
-    box-shadow: var(--shadow);
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    animation: toastIn .22s ease both;
-  }
-  .toast .tIcon {
-    width: 28px;
-    height: 28px;
-    flex: 0 0 28px;
-    opacity: .95;
-    filter: drop-shadow(0 8px 14px rgba(0,0,0,.25));
-  }
-  .toast .tTitle {
-    font-weight: 800;
-    line-height: 1.1;
-  }
-  .toast .tBody {
-    opacity: .92;
-    margin-top: 3px;
-    line-height: 1.25;
-  }
-  .toast.private {
-    border-color: rgba(115,146,255,.32);
-    background: rgba(26, 38, 90, .42);
-  }
-  .toast.public {
-    border-color: rgba(255,255,255,.20);
-  }
-  .toast.day {
-    border-color: rgba(255,212,86,.32);
-    background: rgba(88, 60, 10, .35);
-  }
-  @keyframes toastIn {
-    from { opacity: 0; transform: translateY(-6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes toastOut {
-    to { opacity: 0; transform: translateY(-8px); }
-  }
+/* Night wait */
+.night-wait {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; height: 100%; text-align: center;
+}
+.night-wait .big-icon { font-size: 72px; opacity: .6; animation: floaty 4s ease-in-out infinite; }
+@keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+.night-wait p { color: var(--muted); font-size: 15px; }
 
-  /* Left sidebar: players list (desktop) */
-  @media (min-width: 1100px) {
-    body.hasPlayersSidebar .container {
-      padding-left: 336px !important;
-    }
-    #playersSidebar {
-      position: fixed;
-      top: 76px;
-      left: 16px;
-      bottom: 16px;
-      width: 304px;
-      z-index: 6;
-    }
-    #playersSidebar .card {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-    #playersSidebar .playersGrid {
-      flex: 1;
-      min-height: 0;
-      overflow: auto;
-    }
-  }
+/* Pick grid */
+.pick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px; margin-bottom: 14px;
+}
+.pick-card {
+  cursor: pointer;
+  border-radius: var(--r); border: 2px solid var(--border);
+  background: var(--surface);
+  text-align: center; padding: 12px 8px;
+  transition: all .2s;
+  position: relative;
+}
+.pick-card:hover { border-color: rgba(155,89,255,.5); background: rgba(155,89,255,.1); transform: translateY(-2px); }
+.pick-card input[type=radio] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; margin: 0; }
+.pick-card:has(input:checked) {
+  border-color: var(--purple);
+  background: rgba(155,89,255,.18);
+  box-shadow: 0 0 16px rgba(155,89,255,.3);
+}
+.pick-card:has(input:disabled) { opacity: .35; cursor: not-allowed; pointer-events: none; }
+.pick-card img { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--border); margin-bottom: 6px; }
+.pick-card .pick-name { font-size: 12px; font-weight: 600; }
+.pick-card .pick-note { font-size: 10px; color: var(--muted); margin-top: 2px; }
 
-  /* Right sidebar: events + chat (desktop) */
-  @media (min-width: 1100px) {
-    body.hasRightSidebar .container {
-      padding-right: 440px !important;
-    }
-    #rightSidebar {
-      position: fixed;
-      top: 76px;
-      right: 16px;
-      bottom: 16px;
-      width: 408px;
-      z-index: 6;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    #rightSidebar .card {
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-    #rightSidebar .eventsCard { flex: 1 1 auto; min-height: 0; }
-    #rightSidebar .chatCard { flex: 1 1 auto; min-height: 0; }
-    #rightSidebar .feed,
-    #rightSidebar .chatBox {
-      flex: 1;
-      min-height: 0;
-      max-height: none;
-      overflow: auto;
-    }
-    #rightSidebar .row.mt { margin-top: 10px !important; }
-  }
+/* Vote card special */
+.pick-grid.vote-grid .pick-card:has(input:checked) {
+  border-color: var(--gold);
+  background: rgba(245,166,35,.15);
+  box-shadow: 0 0 16px rgba(245,166,35,.25);
+}
+.pick-grid.wolf-grid .pick-card:has(input:checked) {
+  border-color: var(--crimson);
+  background: rgba(220,20,60,.15);
+  box-shadow: 0 0 16px rgba(220,20,60,.25);
+}
 
-  /* WebSocket connection indicator */
-  #wsStatus { font-size: 12px; }
-  #wsStatus.green {
-    background: rgba(16,185,129,.22) !important;
-    border-color: rgba(16,185,129,.55) !important;
-    color: #d1fae5 !important;
-  }
-  body.is-day #wsStatus.green { color: #065f46 !important; }
-  #wsStatus.red {
-    background: rgba(220,38,38,.22) !important;
-    border-color: rgba(220,38,38,.55) !important;
-    color: #fecaca !important;
-  }
-  body.is-day #wsStatus.red { color: #991b1b !important; }
+/* Submit button */
+.btn-action {
+  width: 100%; padding: 13px; border-radius: var(--r);
+  border: none; cursor: pointer;
+  font-family: var(--font-title); font-size: 15px; letter-spacing: .06em;
+  font-weight: 700; transition: all .2s;
+  margin-top: 4px;
+}
+.btn-action:hover { filter: brightness(1.12); transform: translateY(-1px); }
+.btn-action:active { transform: translateY(0); }
+.btn-action.wolf   { background: linear-gradient(135deg, #8b0000, var(--crimson)); color: #fff; }
+.btn-action.seer   { background: linear-gradient(135deg, #4c1d95, var(--purple)); color: #fff; }
+.btn-action.witch  { background: linear-gradient(135deg, #14532d, var(--emerald)); color: #fff; }
+.btn-action.vote   { background: linear-gradient(135deg, #78350f, var(--gold)); color: #1a0e00; }
+.btn-action.chat   { background: linear-gradient(135deg, #1e40af, #60a5fa); color: #fff; }
 
-  /* Phase banner */
-  .phaseBanner {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 4px 0 14px;
-    padding: 12px 18px;
-    border-radius: 16px;
-    background: var(--glass-strong, rgba(255,255,255,.12));
-    border: 1px solid var(--stroke, rgba(255,255,255,.14));
-    backdrop-filter: blur(10px);
-    box-shadow: var(--shadow-soft);
-    animation: fadeInUp .3s ease both;
-  }
-  .phaseBannerIcon {
-    font-size: 30px;
-    line-height: 1;
-    animation: phasePulse 2.2s ease-in-out infinite;
-  }
-  .phaseBannerText { font-size: 20px; font-weight: 800; letter-spacing: .04em; }
-  .phaseBannerDay { margin-left: auto; opacity: .85; }
-  @keyframes phasePulse {
-    0%,100% { transform: scale(1); }
-    50% { transform: scale(1.14); }
-  }
+/* Chat input row */
+.chat-row {
+  display: flex; gap: 8px; margin-top: 10px;
+}
+.chat-row input {
+  flex: 1; padding: 10px 14px; border-radius: var(--r-sm);
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--font-body); font-size: 14px;
+  outline: none; transition: border-color .2s;
+}
+.chat-row input:focus { border-color: rgba(96,165,250,.5); }
+.chat-row button {
+  padding: 10px 16px; border-radius: var(--r-sm);
+  background: #1e40af; border: none; color: #fff;
+  font-weight: 700; cursor: pointer; transition: all .2s; white-space: nowrap;
+}
+.chat-row button:hover { background: #2563eb; }
 
-  /* Already voted badge */
-  .votedBadge {
-    display: inline-block;
-    margin: 4px 0 10px;
-    padding: 10px 14px;
-    border-radius: 12px;
-    font-weight: 700;
-    background: rgba(16,185,129,.18);
-    border: 1px solid rgba(16,185,129,.5);
-    color: #6ee7b7;
-  }
-  body.is-day .votedBadge {
-    color: #065f46;
-    background: rgba(16,185,129,.15);
-  }
+/* Voted badge */
+.voted-banner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 18px; border-radius: var(--r);
+  background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.35);
+  color: #6ee7b7; font-size: 15px; font-weight: 700; margin-bottom: 14px;
+}
+.voted-banner .big { font-size: 26px; }
 
+/* Vote counter bar */
+.vote-bar-wrap { margin-bottom: 14px; }
+.vote-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.vote-bar { height: 6px; border-radius: 999px; background: var(--surface2); overflow: hidden; }
+.vote-bar-fill { height: 100%; background: linear-gradient(90deg, #78350f, var(--gold)); border-radius: 999px; transition: width .5s ease; }
 
-  /* Small UX touches */
-  .btn {
-    transition: transform .12s ease, filter .12s ease;
-  }
-  .btn:hover {
-    filter: brightness(1.06);
-    transform: translateY(-1px);
-  }
-  .btn:active {
-    transform: translateY(0);
-  }
+/* Finished screen */
+.finished-screen {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 20px; height: 100%; text-align: center;
+}
+.finished-screen .trophy { font-size: 80px; animation: pulse 2s ease-in-out infinite; }
+.finished-screen h2 { font-family: var(--font-title); font-size: 28px; color: var(--gold); }
 
-  /* Respect reduced motion */
-  @media (prefers-reduced-motion: reduce) {
-    #ambientBg .bgLayer, .toast, .card, .bgSun, .bgMoon, #bgNight .stars, #bgDay .bird, .roleShowcase img {
-      animation: none !important;
-      transition: none !important;
-    }
+/* Witch subcards */
+.witch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.witch-sub {
+  padding: 12px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: var(--surface);
+}
+.witch-sub h3 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+
+/* Subcard section header */
+.section-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .1em;
+  color: var(--muted); margin-bottom: 8px; font-weight: 700;
+}
+
+/* Dead player overlay */
+.dead-screen {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 16px; height: 100%; text-align: center;
+  color: var(--muted);
+}
+.dead-screen .skull-big { font-size: 64px; opacity: .6; }
+
+/* Error flash */
+.flash-error {
+  padding: 10px 14px; border-radius: var(--r-sm); margin-bottom: 12px;
+  background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.3);
+  color: #fca5a5; font-size: 13px;
+}
+
+/* ═══════════════════════════════════════════════════
+   RIGHT PANEL — EVENTS + CHAT
+═══════════════════════════════════════════════════ */
+#right {
+  grid-area: right;
+  border-left: 1px solid var(--border);
+  background: rgba(7,9,15,.6);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* Events */
+#eventsPanel {
+  flex: 1; display: flex; flex-direction: column; min-height: 0;
+  border-bottom: 1px solid var(--border);
+}
+#eventsPanel .panel-title { padding: 12px 14px 10px; font-family: var(--font-title); font-size: 12px; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+#events {
+  flex: 1; overflow-y: auto; padding: 10px 12px;
+  font-size: 12.5px; line-height: 1.5;
+  white-space: pre-wrap; word-break: break-word;
+}
+#events::-webkit-scrollbar { width: 3px; }
+#events::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.ev-line { padding: 4px 8px; border-radius: 6px; margin-bottom: 3px; animation: evIn .2s ease both; }
+@keyframes evIn { from{opacity:0;transform:translateX(6px)} to{opacity:1;transform:translateX(0)} }
+.ev-line.private { background: rgba(155,89,255,.12); border-left: 2px solid var(--purple); }
+.ev-line.public  { border-left: 2px solid transparent; }
+
+/* Chat panel */
+#chatPanel {
+  flex: 1; display: flex; flex-direction: column; min-height: 0;
+}
+#chatPanel .panel-title { padding: 12px 14px 10px; font-family: var(--font-title); font-size: 12px; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+#chat {
+  flex: 1; overflow-y: auto; padding: 8px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+#chat::-webkit-scrollbar { width: 3px; }
+#chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.msg { display: flex; gap: 8px; animation: evIn .2s ease both; }
+.msg img { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; object-fit: cover; border: 1px solid var(--border); }
+.msg .bubble { flex: 1; }
+.msg .bubble .sender { font-size: 11px; font-weight: 700; color: #a78bfa; }
+.msg .bubble .text { font-size: 13px; color: var(--text); }
+.msg .bubble .meta { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+#chatInputRow {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border); flex-shrink: 0;
+}
+#chatInputRow form { display: flex; gap: 6px; }
+#chatInputRow input {
+  flex: 1; padding: 8px 12px; border-radius: var(--r-sm);
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-size: 13px; outline: none;
+  transition: border-color .2s;
+}
+#chatInputRow input:focus { border-color: rgba(155,89,255,.5); }
+#chatInputRow button {
+  padding: 8px 14px; border-radius: var(--r-sm);
+  background: rgba(155,89,255,.3); border: 1px solid rgba(155,89,255,.5);
+  color: #c4b5fd; font-weight: 700; cursor: pointer;
+  font-size: 13px; transition: all .2s;
+}
+#chatInputRow button:hover { background: rgba(155,89,255,.5); }
+
+/* chat hidden in some phases */
+#chatPanel.hidden { display: none; }
+
+/* Scrollbar global */
+* { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+/* Toast stack */
+#toastStack {
+  position: fixed; top: 58px; right: 16px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px;
+  width: 280px; pointer-events: none;
+}
+.toast {
+  padding: 10px 14px; border-radius: var(--r-sm);
+  background: rgba(7,9,15,.92); border: 1px solid var(--border);
+  backdrop-filter: blur(10px); font-size: 13px;
+  animation: toastIn .2s ease both;
+  pointer-events: none;
+}
+@keyframes toastIn { from{opacity:0;transform:translateX(12px)} to{opacity:1;transform:translateX(0)} }
+.toast .t-title { font-weight: 700; color: var(--text); }
+.toast .t-body  { color: var(--muted); margin-top: 2px; }
+.toast.private  { border-color: rgba(155,89,255,.4); }
+.toast.public   { border-color: rgba(255,255,255,.18); }
+
+/* Responsive: stack vertically on small screens */
+@media (max-width: 900px) {
+  #shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 52px auto 1fr auto;
+    grid-template-areas: "topbar" "left" "center" "right";
+    overflow-y: auto;
   }
+  html, body { overflow: auto; }
+  #left { max-height: 180px; border-right: none; border-bottom: 1px solid var(--border); }
+  #playersList { flex-direction: row; flex-wrap: wrap; overflow-x: auto; overflow-y: hidden; }
+  #right { height: 300px; border-left: none; border-top: 1px solid var(--border); }
+  #center { overflow: visible; }
+  #actionArea { overflow: visible; }
+}
 </style>
 </head>
-<body class="ww" th:attr="data-phase=${game.phase.name()},data-role=${myGp != null ? myGp.role : ''},data-alive=${myGp != null ? myGp.alive : false}" th:classappend="${#strings.startsWith(game.phase.name(),'NIGHT')} ? ' is-night' : ' is-day'">
 
-    <div id="ambientBg" aria-hidden="true">
-      <div id="bgDay" class="bgLayer"></div>
-      <div id="bgNight" class="bgLayer"></div>
-    </div>
-    <div id="toastStack" aria-live="polite" aria-atomic="true"></div>
+<body th:attr="data-phase=${game.phase.name()},data-role=${myGp != null ? myGp.role.name() : ''},data-alive=${myGp != null ? myGp.alive : false},data-code=${room.code},data-uid=${me.id}"
+      th:classappend="${#strings.startsWith(game.phase.name(),'NIGHT')} ? ' is-night' : ' is-day'">
 
+<div id="atmo" aria-hidden="true"></div>
+<div id="toastStack" aria-live="polite"></div>
 
-<div class="container">
-    <div class="topbar">
-        <a class="link" th:href="@{|/room/${room.code}|}">← Room</a>
-        <div class="row gap">
-            <span class="pill">Code: <b th:text="${room.code}"></b></span>
-            <span class="pill">Jour: <b th:text="${game.dayNumber}"></b></span>
-            <span class="pill" id="phaseLabel">Phase: <b th:text="${game.phase}"></b></span>
-            <span class="pill" id="timerPill" th:if="${phaseEndsAtMs > 0}">
-        ⏳ <span id="countdown">--</span>
-      </span>
-            <span class="pill" id="wsStatus">🔴 Déconnecté</span>
-            <button id="musicToggle" class="btn tiny secondary" type="button">🔊 Musique</button>
+<div id="shell">
+
+  <!-- ═══ TOP BAR ═══ -->
+  <header id="topbar">
+    <span class="logo">🐺 LOUP-GAROU</span>
+    <span class="chip" style="font-family:'Cinzel',serif;" th:text="${room.code}">ROOM</span>
+    <span class="chip" id="dayChip" th:text="|Jour ${game.dayNumber}|">Jour 1</span>
+    <span class="chip" id="phaseChip"
+          th:classappend="${#strings.startsWith(game.phase.name(),'NIGHT')} ? ' night' : ' day'"
+          th:text="${game.phase}">PHASE</span>
+    <span class="chip" id="countdown-chip" th:if="${phaseEndsAtMs > 0}">⏳ <span id="countdown">--</span></span>
+    <div class="spacer"></div>
+    <span class="chip" id="wsChip" style="border-color:rgba(239,68,68,.4);color:#fca5a5;">🔴 Connexion...</span>
+    <button id="musicToggle" type="button">🔊 Musique</button>
+  </header>
+
+  <!-- ═══ LEFT — PLAYERS ═══ -->
+  <aside id="left">
+    <div class="panel-title">⚔️ Joueurs</div>
+    <div id="playersList">
+      <div class="pcard" th:each="p : ${players}"
+           th:classappend="${p.alive ? 'alive' : 'dead'} + ${p.user.id == me.id ? ' me' : ''}">
+        <img class="av" th:src="@{|/avatars/${p.user.avatar}|}" alt="avatar"/>
+        <div style="flex:1;min-width:0;">
+          <div class="pname" th:text="${p.user.username}">Player</div>
+          <div class="pstatus" th:text="${p.alive ? 'Vivant' : '💀 Éliminé'}">Vivant</div>
         </div>
+        <span class="skull" th:if="${!p.alive}">💀</span>
+      </div>
     </div>
-
-    <div class="phaseBanner" id="phaseBanner" th:attr="data-phase=${game.phase.name()}">
-        <span class="phaseBannerIcon" id="phaseBannerIcon">🌙</span>
-        <span class="phaseBannerText" th:text="${game.phase}">PHASE</span>
-        <span class="phaseBannerDay">Jour <b th:text="${game.dayNumber}"></b></span>
-    </div>
-
-    <p class="error" th:if="${error}" th:text="${error}"></p>
-
-    <div class="card">
-        <div class="row gap">
-            <div class="me">
-                <img class="avatar" th:src="@{|/avatars/${me.avatar}|}" alt="avatar"/>
-                <div>
-                    <div><b th:text="${me.username}"></b></div>
-                    <div class="muted">Rôle: <b th:text="${myGp.role}"></b> · <span th:text="${myGp.alive ? 'Vivant' : 'Mort'}"></span></div>
-                </div>
-            </div>
-            <div class="right">
-                <span class="pill red" th:if="${!myGp.alive}">Vous êtes éliminé</span>
-                <span class="pill green" th:if="${myGp.alive}">En jeu</span>
-            </div>
+    <div id="myRole" th:if="${myGp != null}">
+      <div class="role-badge" id="roleBadge">
+        <span class="role-icon" id="roleIcon">❓</span>
+        <div>
+          <div class="role-name" th:text="${myGp.role}">ROLE</div>
+          <div class="role-desc" id="roleDesc">Chargement...</div>
         </div>
-    
-
-<div class="card roleShowcase" id="roleShowcase" th:if="${myGp != null}">
-    <div class="roleArt">
-        <img id="roleImg" alt="role" src="https://api.iconify.design/mdi:information-outline.svg?color=%23ffffff">
+      </div>
     </div>
-    <div>
-        <div class="kicker">Votre rôle</div>
-        <div class="roleName" id="roleNameText" th:text="${myGp.role}">ROLE</div>
-        <div class="roleDesc" id="roleDesc"></div>
-    </div>
-</div>
+  </aside>
 
-    <div class="card">
-        <h2>Joueurs</h2>
-        <div class="playersGrid">
-            <div class="playerCard" th:each="p : ${players}" th:classappend="${p.alive ? '' : 'dead'}">
-                <img class="avatar big" th:src="@{|/avatars/${p.user.avatar}|}" alt="avatar"/>
-                <div class="name">
-                    <span th:text="${p.user.username}"></span>
-                    <span class="muted" th:if="${!p.alive}"> (mort)</span>
-                </div>
-            </div>
-        </div>
+  <!-- ═══ CENTER — ACTION ═══ -->
+  <main id="center">
+    <!-- Phase hero -->
+    <div id="phaseHero">
+      <span id="phaseEmoji">🌙</span>
+      <div>
+        <div id="phaseTitle" style="font-family:'Cinzel',serif;font-size:18px;font-weight:700;">Chargement...</div>
+        <div id="phaseSubtitle" style="font-size:12px;color:var(--muted);margin-top:2px;"></div>
+      </div>
+      <div class="timer-big" id="timerBig" th:if="${phaseEndsAtMs > 0}"><span id="countdown2">--</span></div>
     </div>
-<!-- EVENTS FEED -->
-<div class="card eventsCard">
-    <div class="row gap eventsHeader">
-        <h2>📜 Événements</h2>
-        <span class="pill tiny">🔒 Privé</span>
-    </div>
-    <p class="muted eventsHint">Historique des actions et annonces de la partie.</p>
-    <div id="events" class="feed eventsFeed">Chargement...</div>
-</div>
 
-<!-- NIGHT: WOLVES -->
-    <div class="card" th:if="${game.phase.name() == 'NIGHT_WOLVES'}">
-        <h2>🌙 Nuit — Tour des Loups</h2>
+    <!-- Error flash -->
+    <div class="flash-error" th:if="${error}" style="margin:12px 20px 0;" th:text="${error}"></div>
 
+    <!-- Action area -->
+    <div id="actionArea">
+
+      <!-- ─ NIGHT WOLVES ─ -->
+      <div th:if="${game.phase.name() == 'NIGHT_WOLVES'}">
         <div th:if="${myGp.alive and myGp.role.name() == 'WOLF'}">
-            <p class="muted">Choisis une cible. Chaque loup doit choisir une personne différente.</p>
-
-            <form method="post" th:action="@{|/game/${room.code}/wolf-kill|}">
-                <div class="pickGrid">
-                    <label class="pick" th:each="p : ${players}"
-                           th:if="${p.alive and p.role.name() != 'WOLF' and p.id != myGp.id}">
-                        <input type="radio" name="targetId" th:value="${p.id}"
-                               th:checked="${myWolfTarget != null and myWolfTarget == p.id}"
-                               th:disabled="${wolfTakenTargets != null and wolfTakenTargets.contains(p.id)}" required/>
-                        <div class="pickCard">
-                            <img class="avatar big" th:src="@{|/avatars/${p.user.avatar}|}"/>
-                            <div>
-                                <div><b th:text="${p.user.username}"></b></div>
-                                <div class="muted" th:if="${wolfTakenTargets != null and wolfTakenTargets.contains(p.id)}">Déjà choisi par un autre loup</div>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-                <button class="btn" type="submit">✅ Confirmer la victime</button>
-            </form>
-        </div>
-
-        <div th:if="${!(myGp.alive and myGp.role.name() == 'WOLF')}">
-            <div class="nightWait">
-                <p>🌙 C'est la nuit...</p>
-                <p class="muted">Attendez que les loups jouent.</p>
+          <p class="section-label">🎯 Choisissez votre victime</p>
+          <form method="post" th:action="@{|/game/${room.code}/wolf-kill|}">
+            <div class="pick-grid wolf-grid">
+              <div class="pick-card" th:each="p : ${players}"
+                   th:if="${p.alive and p.role.name() != 'WOLF' and p.id != myGp.id}">
+                <input type="radio" name="targetId" th:value="${p.id}"
+                       th:checked="${myWolfTarget != null and myWolfTarget == p.id}"
+                       th:disabled="${wolfTakenTargets != null and wolfTakenTargets.contains(p.id)}" required/>
+                <img th:src="@{|/avatars/${p.user.avatar}|}"/>
+                <div class="pick-name" th:text="${p.user.username}">Player</div>
+                <div class="pick-note" th:if="${wolfTakenTargets != null and wolfTakenTargets.contains(p.id)}">Pris</div>
+              </div>
             </div>
+            <button class="btn-action wolf" type="submit">🐺 Attaquer cette nuit</button>
+          </form>
         </div>
-    </div>
+        <div th:if="${!(myGp.alive and myGp.role.name() == 'WOLF')}" class="night-wait">
+          <div class="big-icon">🌙</div>
+          <p>La nuit tombe sur le village...</p>
+          <p style="font-size:12px;">Les loups rôdent. Attendez l'aube.</p>
+        </div>
+      </div>
 
-    <!-- NIGHT: SEER -->
-    <div class="card" th:if="${game.phase.name() == 'NIGHT_SEER'}">
-        <h2>✨ Nuit — Tour de la Voyante</h2>
-
+      <!-- ─ NIGHT SEER ─ -->
+      <div th:if="${game.phase.name() == 'NIGHT_SEER'}">
         <div th:if="${myGp.alive and myGp.role.name() == 'SEER'}">
-            <p class="muted">Choisis un joueur à inspecter.</p>
-            <form method="post" th:action="@{|/game/${room.code}/seer-check|}">
-                <div class="pickGrid">
-                    <label class="pick" th:each="p : ${players}" th:if="${p.alive and p.id != myGp.id}">
-                        <input type="radio" name="targetId" th:value="${p.id}" required/>
-                        <div class="pickCard">
-                            <img class="avatar big" th:src="@{|/avatars/${p.user.avatar}|}"/>
-                            <div><b th:text="${p.user.username}"></b></div>
-                        </div>
-                    </label>
-                </div>
-                <button class="btn" type="submit">🔮 Voir le rôle</button>
-            </form>
-        </div>
-
-        <div th:if="${!(myGp.alive and myGp.role.name() == 'SEER')}">
-            <div class="nightWait">
-                <p>🌙 C'est la nuit...</p>
-                <p class="muted">Attendez que la voyante joue.</p>
+          <p class="section-label">🔮 Inspectez un joueur</p>
+          <form method="post" th:action="@{|/game/${room.code}/seer-check|}">
+            <div class="pick-grid">
+              <div class="pick-card" th:each="p : ${players}" th:if="${p.alive and p.id != myGp.id}">
+                <input type="radio" name="targetId" th:value="${p.id}" required/>
+                <img th:src="@{|/avatars/${p.user.avatar}|}"/>
+                <div class="pick-name" th:text="${p.user.username}">Player</div>
+              </div>
             </div>
+            <button class="btn-action seer" type="submit">✨ Révéler le rôle</button>
+          </form>
         </div>
-    </div>
+        <div th:if="${!(myGp.alive and myGp.role.name() == 'SEER')}" class="night-wait">
+          <div class="big-icon">🔮</div>
+          <p>La voyante consulte les esprits...</p>
+        </div>
+      </div>
 
-    <!-- NIGHT: WITCH -->
-    <div class="card" th:if="${game.phase.name() == 'NIGHT_WITCH'}">
-        <h2>🧙‍♀️ Nuit — Tour de la Sorcière</h2>
-
+      <!-- ─ NIGHT WITCH ─ -->
+      <div th:if="${game.phase.name() == 'NIGHT_WITCH'}">
         <div th:if="${myGp.alive and myGp.role.name() == 'WITCH'}">
-            <p class="muted">Tu peux (optionnel) soigner une victime des loups et/ou empoisonner quelqu'un. Chaque potion une seule fois.</p>
-
-            <form method="post" th:action="@{|/game/${room.code}/witch-act|}">
-                <div class="grid2">
-                    <div class="subcard">
-                        <h3>🧪 Soin (disponible: <span th:text="${myGp.witchHealAvailable ? 'Oui' : 'Non'}"></span>)</h3>
-                        <p class="muted" th:if="${wolfVictims == null or wolfVictims.size() == 0}">Aucune victime à soigner.</p>
-
-                        <div class="pickGrid">
-                            <label class="pick" th:each="v : ${wolfVictims}">
-                                <input type="radio" name="healTargetId" th:value="${v.id}" th:disabled="${!myGp.witchHealAvailable}"/>
-                                <div class="pickCard">
-                                    <img class="avatar big" th:src="@{|/avatars/${v.user.avatar}|}"/>
-                                    <div><b th:text="${v.user.username}"></b></div>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="subcard">
-                        <h3>☠️ Poison (disponible: <span th:text="${myGp.witchPoisonAvailable ? 'Oui' : 'Non'}"></span>)</h3>
-                        <div class="pickGrid">
-                            <label class="pick" th:each="p : ${players}" th:if="${p.alive and p.id != myGp.id}">
-                                <input type="radio" name="poisonTargetId" th:value="${p.id}" th:disabled="${!myGp.witchPoisonAvailable}"/>
-                                <div class="pickCard">
-                                    <img class="avatar big" th:src="@{|/avatars/${p.user.avatar}|}"/>
-                                    <div><b th:text="${p.user.username}"></b></div>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
+          <form method="post" th:action="@{|/game/${room.code}/witch-act|}">
+            <div class="witch-grid">
+              <div class="witch-sub">
+                <h3>🧪 Soin <span style="font-size:10px;opacity:.6;" th:text="${myGp.witchHealAvailable ? '(disponible)' : '(utilisé)'}"></span></h3>
+                <div th:if="${wolfVictims == null or wolfVictims.size() == 0}" style="color:var(--muted);font-size:12px;">Aucune victime.</div>
+                <div class="pick-grid" th:if="${wolfVictims != null and wolfVictims.size() > 0}">
+                  <div class="pick-card" th:each="v : ${wolfVictims}">
+                    <input type="radio" name="healTargetId" th:value="${v.id}" th:disabled="${!myGp.witchHealAvailable}"/>
+                    <img th:src="@{|/avatars/${v.user.avatar}|}"/>
+                    <div class="pick-name" th:text="${v.user.username}">Player</div>
+                  </div>
                 </div>
-
-                <button class="btn" type="submit">✅ Confirmer</button>
-            </form>
-        </div>
-
-        <div th:if="${!(myGp.alive and myGp.role.name() == 'WITCH')}">
-            <div class="nightWait">
-                <p>🌙 C'est la nuit...</p>
-                <p class="muted">Attendez que la sorcière joue.</p>
+              </div>
+              <div class="witch-sub">
+                <h3>☠️ Poison <span style="font-size:10px;opacity:.6;" th:text="${myGp.witchPoisonAvailable ? '(disponible)' : '(utilisé)'}"></span></h3>
+                <div class="pick-grid">
+                  <div class="pick-card" th:each="p : ${players}" th:if="${p.alive and p.id != myGp.id}">
+                    <input type="radio" name="poisonTargetId" th:value="${p.id}" th:disabled="${!myGp.witchPoisonAvailable}"/>
+                    <img th:src="@{|/avatars/${p.user.avatar}|}"/>
+                    <div class="pick-name" th:text="${p.user.username}">Player</div>
+                  </div>
+                </div>
+              </div>
             </div>
+            <button class="btn-action witch" type="submit">🧙‍♀️ Confirmer les potions</button>
+          </form>
         </div>
-    </div>
+        <div th:if="${!(myGp.alive and myGp.role.name() == 'WITCH')}" class="night-wait">
+          <div class="big-icon">🧙‍♀️</div>
+          <p>La sorcière prépare ses potions...</p>
+        </div>
+      </div>
 
-    <!-- DAY CHAT -->
-    <div class="card chatCard" th:if="${game.phase.name() == 'DAY_CHAT'}">
-        <h2>☀️ Jour — Discussion</h2>
-        <p class="muted">Quand le temps se termine, on passe automatiquement au vote.</p>
+      <!-- ─ DAY CHAT ─ -->
+      <div th:if="${game.phase.name() == 'DAY_CHAT'}" style="height:100%;display:flex;flex-direction:column;">
+        <p class="section-label">💬 Discussion — Trouvez les loups !</p>
+        <div id="chat" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;min-height:0;padding-bottom:8px;"></div>
+        <div th:if="${myGp.alive}" style="margin-top:8px;">
+          <form method="post" th:action="@{|/game/${room.code}/chat|}" class="chat-row">
+            <input name="message" placeholder="Votre message..." maxlength="300" autocomplete="off"/>
+            <button class="btn-action chat" type="submit" style="width:auto;padding:10px 16px;">Envoyer</button>
+          </form>
+        </div>
+        <p th:if="${!myGp.alive}" style="color:var(--muted);font-size:13px;margin-top:8px;">💀 Vous êtes mort — spectateur silencieux.</p>
+      </div>
 
-        <div id="chat" class="chatBox"></div>
+      <!-- ─ DAY VOTE ─ -->
+      <div th:if="${game.phase.name() == 'DAY_VOTE'}">
+        <!-- Vote bar -->
+        <div class="vote-bar-wrap">
+          <div class="vote-label">Votes : <span id="voteCounter" th:text="${voteCount}">0</span> / <span id="aliveCounter" th:text="${aliveCount}">0</span></div>
+          <div class="vote-bar">
+            <div class="vote-bar-fill" id="voteBarFill"
+                 th:style="${aliveCount > 0} ? 'width:' + ${(voteCount * 100 / aliveCount)} + '%' : 'width:0%'"></div>
+          </div>
+        </div>
 
         <div th:if="${myGp.alive}">
-            <form method="post" th:action="@{|/game/${room.code}/chat|}" class="row gap mt">
-                <input name="message" placeholder="Écrire un message..." maxlength="300" class="chatInput"/>
-                <button class="btn" type="submit">Envoyer</button>
-            </form>
-        </div>
+          <div th:if="${hasVoted}" class="voted-banner">
+            <span class="big">✅</span>
+            <div>
+              <div>Vote enregistré !</div>
+              <div style="font-size:12px;font-weight:400;opacity:.75;">Impossible de changer votre vote.</div>
+            </div>
+          </div>
 
-        <p class="muted" th:if="${!myGp.alive}">Vous êtes mort: vous ne pouvez plus discuter.</p>
-    </div>
-
-    <!-- DAY VOTE -->
-        <th:block th:if="${game.phase.name() == 'DAY_VOTE'}">
-            <div class="card">
-        <h2>🗳️ Vote</h2>
-<p class="muted">Si le temps se termine et que vous n'avez pas voté, votre vote est perdu.</p>
-<p class="muted" th:if="${myGp.alive}">Votes en cours: <b id="voteCounter" th:text="|${voteCount}/${aliveCount}|">0/0</b></p>
-
-<div th:if="${myGp.alive}">
-    <div th:if="${hasVoted}" class="votedBadge">✅ Vous avez voté — impossible de changer votre vote.</div>
-
-    <form method="post" th:action="@{|/game/${room.code}/vote|}" th:unless="${hasVoted}">
-        <div class="pickGrid">
-            <label class="pick" th:each="p : ${players}" th:if="${p.alive and p.id != myGp.id}">
-                <input type="radio" name="targetId" th:value="${p.id}" required/>
-                <div class="pickCard">
-                    <img class="avatar big" th:src="@{|/avatars/${p.user.avatar}|}"/>
-                    <div><b th:text="${p.user.username}"></b></div>
+          <div th:unless="${hasVoted}">
+            <p class="section-label">🗳️ Qui éliminer ? Votez !</p>
+            <form method="post" th:action="@{|/game/${room.code}/vote|}">
+              <div class="pick-grid vote-grid">
+                <div class="pick-card" th:each="p : ${players}" th:if="${p.alive and p.id != myGp.id}">
+                  <input type="radio" name="targetId" th:value="${p.id}" required/>
+                  <img th:src="@{|/avatars/${p.user.avatar}|}"/>
+                  <div class="pick-name" th:text="${p.user.username}">Player</div>
                 </div>
-            </label>
+              </div>
+              <button class="btn-action vote" type="submit">⚖️ Voter pour l'élimination</button>
+            </form>
+          </div>
         </div>
-        <button class="btn" type="submit">Voter</button>
-    </form>
-</div>
+        <div th:if="${!myGp.alive}" class="dead-screen">
+          <div class="skull-big">💀</div>
+          <p>Vous observez le vote depuis l'au-delà.</p>
+        </div>
+      </div>
 
-<p class="muted" th:if="${!myGp.alive}">Vous êtes mort: vous ne pouvez plus voter.</p>
-            </div>
+      <!-- ─ FINISHED ─ -->
+      <div th:if="${game.phase.name() == 'FINISHED'}" class="finished-screen">
+        <div class="trophy">🏆</div>
+        <h2 style="font-family:'Cinzel',serif;font-size:24px;color:var(--gold);">Partie terminée !</h2>
+        <p style="font-size:18px;">Vainqueur : <b th:text="${game.winner}">???</b></p>
+        <p style="color:var(--muted);font-size:13px;">Consultez les événements pour voir tous les rôles.</p>
+        <a th:href="@{/play}" style="padding:12px 28px;border-radius:var(--r);background:var(--gold);color:#1a0e00;font-weight:700;font-family:'Cinzel',serif;text-decoration:none;margin-top:8px;">🏠 Retour au menu</a>
+      </div>
 
-            <div class="card chatCard">
-                <h2>💬 Chat</h2>
-                <p class="muted">Lecture seule pendant le vote.</p>
-                <div id="chat" class="chatBox"></div>
-            </div>
-        </th:block>
+    </div><!-- /actionArea -->
+  </main>
 
-<!-- FINISHED -->
-    <div class="card" th:if="${game.phase.name() == 'FINISHED'}">
-        <h2>🏁 Fin de partie</h2>
-        <p>Gagnant: <b th:text="${game.winner}"></b></p>
-        <p class="muted">Les rôles ont été révélés dans les événements.</p>
+  <!-- ═══ RIGHT — EVENTS + CHAT ═══ -->
+  <aside id="right">
+    <div id="eventsPanel">
+      <div class="panel-title">📜 Événements</div>
+      <div id="events"></div>
     </div>
+    <div id="chatPanel"
+         th:classappend="${game.phase.name() == 'DAY_CHAT'} ? ' hidden' : ''">
+      <div class="panel-title">💬 Chat</div>
+      <div id="chat2"></div>
+      <div id="chatInputRow" th:if="${game.phase.name() == 'DAY_VOTE' and myGp.alive}" style="display:none;"></div>
+    </div>
+  </aside>
 
-</div>
+</div><!-- /shell -->
 
 <!-- Audio -->
 <audio id="audioNight" loop preload="auto">
-    <source th:src="@{/audio/wolves.ogg}" type="audio/ogg"/>
-    <source th:src="@{/audio/night.wav}" type="audio/wav" />
+  <source th:src="@{/audio/wolves.ogg}" type="audio/ogg"/>
+  <source th:src="@{/audio/night.wav}" type="audio/wav"/>
 </audio>
 <audio id="audioDay" loop preload="auto">
-    <source th:src="@{/audio/birds.ogg}" type="audio/ogg"/>
-    <source th:src="@{/audio/day.wav}" type="audio/wav" />
+  <source th:src="@{/audio/birds.ogg}" type="audio/ogg"/>
+  <source th:src="@{/audio/day.wav}" type="audio/wav"/>
 </audio>
 <audio id="audioClick" preload="auto">
-    <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/UI%20Audio/click2.ogg" type="audio/ogg"/>
-    <source th:src="@{/audio/click.wav}" type="audio/wav" />
+  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/UI%20Audio/click2.ogg" type="audio/ogg"/>
 </audio>
-
 <audio id="audioMorningCue" preload="auto">
-    <source th:src="@{/audio/birds.ogg}" type="audio/ogg"/>
+  <source th:src="@{/audio/birds.ogg}" type="audio/ogg"/>
 </audio>
 <audio id="audioNightCue" preload="auto">
-    <source th:src="@{/audio/wolves.ogg}" type="audio/ogg"/>
+  <source th:src="@{/audio/wolves.ogg}" type="audio/ogg"/>
 </audio>
 
-<audio id="audioClickSfx" preload="auto">
-  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/UI%20Audio/click2.ogg" type="audio/ogg"/>
-</audio>
-<audio id="audioHover" preload="auto">
-  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/UI%20Audio/rollover1.ogg" type="audio/ogg"/>
-</audio>
-<audio id="audioToggle" preload="auto">
-  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/UI%20Audio/switch1.ogg" type="audio/ogg"/>
-</audio>
-
-<audio id="audioWolfSfx" preload="auto">
-  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/RPG%20Audio/knifeSlice.ogg" type="audio/ogg"/>
-</audio>
-<audio id="audioSeerSfx" preload="auto">
-  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/RPG%20Audio/bookOpen.ogg" type="audio/ogg"/>
-</audio>
-<audio id="audioWitchSfx" preload="auto">
-  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/RPG%20Audio/metalPot1.ogg" type="audio/ogg"/>
-</audio>
-<audio id="audioVoteSfx" preload="auto">
-  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/UI%20Audio/switch1.ogg" type="audio/ogg"/>
-</audio>
-<audio id="audioChatSfx" preload="auto">
-  <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/UI%20Audio/click2.ogg" type="audio/ogg"/>
-</audio>
-
+<!-- WW config -->
 <script th:inline="javascript">
-
-    window.WW = {
-        roomCode: /*[[${room.code}]]*/ "XXXXXX",
-        myUserId: /*[[${me.id}]]*/ 0,
-        phase: /*[[${game.phase.name()}]]*/ "LOBBY",
-        phaseEndsAtMs: /*[[${phaseEndsAtMs}]]*/ 0,
-        serverNowMs: /*[[${serverNowMs}]]*/ 0,
-        hasVoted: /*[[${hasVoted}]]*/ false,
-        voteCount: /*[[${voteCount}]]*/ 0,
-        aliveCount: /*[[${aliveCount}]]*/ 0
-    };
+window.WW = {
+  roomCode:     /*[[${room.code}]]*/ "XXXXXX",
+  myUserId:     /*[[${me.id}]]*/ 0,
+  phase:        /*[[${game.phase.name()}]]*/ "LOBBY",
+  phaseEndsAtMs:/*[[${phaseEndsAtMs}]]*/ 0,
+  serverNowMs:  /*[[${serverNowMs}]]*/ 0,
+  hasVoted:     /*[[${hasVoted}]]*/ false,
+  voteCount:    /*[[${voteCount}]]*/ 0,
+  aliveCount:   /*[[${aliveCount}]]*/ 0
+};
 </script>
+
+<!-- SockJS + STOMP -->
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
-<script th:src="@{/js/game.js}"></script>
-<script id="game-upgrade-script">
-(function() {
-  function q(sel, root=document) { return root.querySelector(sel); }
-  function qq(sel, root=document) { return Array.from(root.querySelectorAll(sel)); }
 
-  const ICONS = {
-    info: "https://api.iconify.design/mdi:information-outline.svg?color=%23ffffff",
-    lock: "https://api.iconify.design/mdi:lock.svg?color=%23aab8ff",
-    sun: "https://api.iconify.design/mdi:white-balance-sunny.svg?color=%23ffe082",
-    moon: "https://api.iconify.design/mdi:moon-waning-crescent.svg?color=%23e3f2fd",
-    bird: "https://api.iconify.design/mdi:bird.svg?color=%23ffffff",
-    wolf: "https://api.iconify.design/mdi:wolf.svg?color=%23ffffff",
-    eye: "https://api.iconify.design/mdi:eye-outline.svg?color=%23ffffff",
-    flask: "https://api.iconify.design/mdi:flask-outline.svg?color=%23ffffff",
-    village: "https://api.iconify.design/mdi:account-group-outline.svg?color=%23ffffff",
-    vote: "https://api.iconify.design/mdi:vote-outline.svg?color=%23ffffff",
-    chat: "https://api.iconify.design/mdi:chat-processing-outline.svg?color=%23ffffff"
-  };
+<script>
+// ═══════════════════════════════════════════════════
+// ROLE DATA
+// ═══════════════════════════════════════════════════
+const ROLES = {
+  WOLF:      { icon:'🐺', name:'Loup-Garou', desc:'Chaque nuit, éliminez un villageois.' },
+  VILLAGER:  { icon:'🏘️', name:'Villageois', desc:'Trouvez et éliminez les loups au vote.' },
+  SEER:      { icon:'🔮', name:'Voyante',    desc:'Chaque nuit, découvrez le rôle de quelqu\'un.' },
+  WITCH:     { icon:'🧙‍♀️', name:'Sorcière',   desc:'Utilisez vos potions de soin et de poison.' },
+  HUNTER:    { icon:'🏹', name:'Chasseur',   desc:'À votre mort, éliminez un joueur de votre choix.' },
+};
 
-  function toast({ title, body, kind="public", mood="" }) {
-    const stack = document.getElementById("toastStack");
-    if (!stack) return;
+const PHASES = {
+  NIGHT_WOLVES: { icon:'🐺', title:'Nuit — Les Loups',      sub:'Les loups choisissent leur victime.',  cls:'night' },
+  NIGHT_SEER:   { icon:'🔮', title:'Nuit — La Voyante',     sub:'La voyante consulte les esprits.',     cls:'night' },
+  NIGHT_WITCH:  { icon:'🧙‍♀️', title:'Nuit — La Sorcière',   sub:'La sorcière utilise ses potions.',    cls:'night' },
+  DAY_CHAT:     { icon:'☀️', title:'Jour — Discussion',     sub:'Débattez et trouvez les loups !',      cls:'day'   },
+  DAY_VOTE:     { icon:'⚖️', title:'Jour — Vote',           sub:'Votez pour éliminer un suspect.',      cls:'day'   },
+  FINISHED:     { icon:'🏆', title:'Partie Terminée',       sub:'',                                     cls:'day'   },
+};
 
-    const el = document.createElement("div");
-    el.className = `toast ${kind} ${mood}`;
+// ═══════════════════════════════════════════════════
+// ELEMENTS
+// ═══════════════════════════════════════════════════
+const cfg = window.WW || {};
+const roomCode = cfg.roomCode;
+const myUserId = cfg.myUserId;
+let currentPhase = cfg.phase;
+let phaseEndsAtMs = Number(cfg.phaseEndsAtMs || 0);
+let serverSkew = Number(cfg.serverNowMs || 0) - Date.now();
 
-    const img = document.createElement("img");
-    img.className = "tIcon";
-    img.alt = "";
-    img.src = (kind === "private") ? ICONS.lock : ICONS.info;
+const eventsEl  = document.getElementById('events');
+const chatEl    = document.getElementById('chat') || document.getElementById('chat2');
+const wsChip    = document.getElementById('wsChip');
+const countdown  = document.getElementById('countdown');
+const countdown2 = document.getElementById('countdown2');
+const phaseEmoji  = document.getElementById('phaseEmoji');
+const phaseTitle  = document.getElementById('phaseTitle');
+const phaseSub    = document.getElementById('phaseSubtitle');
+const phaseChip   = document.getElementById('phaseChip');
+const dayChip     = document.getElementById('dayChip');
+const roleIcon    = document.getElementById('roleIcon');
+const roleDesc    = document.getElementById('roleDesc');
+const audioNight  = document.getElementById('audioNight');
+const audioDay    = document.getElementById('audioDay');
+const audioClick  = document.getElementById('audioClick');
+const musicToggle = document.getElementById('musicToggle');
+const toastStack  = document.getElementById('toastStack');
 
-    const text = document.createElement("div");
-    const t = document.createElement("div");
-    t.className = "tTitle";
-    t.textContent = title || "Événement";
-    const b = document.createElement("div");
-    b.className = "tBody";
-    b.textContent = body || "";
-    text.appendChild(t);
-    text.appendChild(b);
+let lastEventId = 0;
+let lastChatId  = 0;
+let musicEnabled = localStorage.getItem('ww_music') === '1';
 
-    el.appendChild(img);
-    el.appendChild(text);
-    stack.appendChild(el);
+// ═══════════════════════════════════════════════════
+// COUNTDOWN
+// ═══════════════════════════════════════════════════
+function fmt(s) {
+  s = Math.max(0, Math.floor(s));
+  const m = Math.floor(s / 60), r = s % 60;
+  return m > 0 ? m + ':' + String(r).padStart(2,'0') : String(r);
+}
 
-    setTimeout(() => {
-      el.style.animation = "toastOut .22s ease forwards";
-      setTimeout(() => el.remove(), 260);
-    }, 5200);
+function tick() {
+  if (!phaseEndsAtMs) return;
+  const rem = Math.max(0, phaseEndsAtMs - Date.now() - serverSkew);
+  const txt = fmt(rem / 1000);
+  if (countdown)  countdown.textContent  = txt;
+  if (countdown2) countdown2.textContent = txt;
+}
+setInterval(tick, 250); tick();
+
+// ═══════════════════════════════════════════════════
+// MUSIC
+// ═══════════════════════════════════════════════════
+function isNight(p) { return p && p.startsWith('NIGHT'); }
+function isDay(p)   { return p === 'DAY_CHAT' || p === 'DAY_VOTE'; }
+
+function updateMusic() {
+  if (musicToggle) musicToggle.textContent = musicEnabled ? '🔊 Musique' : '🔇 Musique';
+  if (!musicEnabled) { [audioNight,audioDay].forEach(a=>{if(a){a.pause();a.currentTime=0;}}); return; }
+  try {
+    if (isNight(currentPhase)) { audioDay&&audioDay.pause(); audioNight&&audioNight.play().catch(()=>{}); }
+    else if (isDay(currentPhase)) { audioNight&&audioNight.pause(); audioDay&&audioDay.play().catch(()=>{}); }
+    else { [audioNight,audioDay].forEach(a=>{if(a){a.pause();a.currentTime=0;}}); }
+  } catch(e){}
+}
+if (musicToggle) {
+  musicToggle.addEventListener('click', () => {
+    musicEnabled = !musicEnabled;
+    localStorage.setItem('ww_music', musicEnabled ? '1' : '0');
+    updateMusic();
+  });
+}
+document.addEventListener('submit', () => {
+  try { if(audioClick){audioClick.currentTime=0;audioClick.play().catch(()=>{});} } catch(e){}
+});
+
+// ═══════════════════════════════════════════════════
+// ROLE & PHASE UI (no reload)
+// ═══════════════════════════════════════════════════
+(function initRoleUI() {
+  const role = document.body.dataset.role;
+  const r = ROLES[role];
+  if (r && roleIcon) { roleIcon.textContent = r.icon; }
+  if (r && roleDesc) { roleDesc.textContent = r.desc; }
+})();
+
+function applyPhaseUI(phase) {
+  const p = PHASES[phase] || { icon:'⏳', title: phase, sub:'', cls:'night' };
+  if (phaseEmoji) phaseEmoji.textContent = p.icon;
+  if (phaseTitle) phaseTitle.textContent = p.title;
+  if (phaseSub)   phaseSub.textContent   = p.sub;
+  if (phaseChip) {
+    phaseChip.textContent = p.title;
+    phaseChip.className = 'chip ' + p.cls;
+  }
+  // Day/night body class
+  document.body.classList.toggle('is-night', p.cls === 'night');
+  document.body.classList.toggle('is-day',   p.cls === 'day');
+}
+applyPhaseUI(currentPhase);
+updateMusic();
+
+// ═══════════════════════════════════════════════════
+// EVENTS & CHAT DOM helpers
+// ═══════════════════════════════════════════════════
+function appendEvent(ev) {
+  if (!eventsEl) return;
+  if (ev.id && ev.id <= lastEventId) return;
+  if (ev.id) lastEventId = Math.max(lastEventId, ev.id);
+
+  const div = document.createElement('div');
+  div.className = 'ev-line ' + (ev.isPrivate ? 'private' : 'public');
+  div.textContent = (ev.isPrivate ? '🔒 ' : '') + ev.message;
+  eventsEl.appendChild(div);
+  eventsEl.scrollTop = eventsEl.scrollHeight;
+}
+
+function escHtml(s) {
+  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+
+function appendChat(msg) {
+  const el = document.getElementById('chat') || document.getElementById('chat2');
+  if (!el) return;
+  if (msg.id && msg.id <= lastChatId) return;
+  if (msg.id) lastChatId = Math.max(lastChatId, msg.id);
+
+  const wrap = document.createElement('div'); wrap.className = 'msg';
+  const img  = document.createElement('img');
+  img.src = '/avatars/' + msg.avatar; img.alt = 'avatar'; img.style.cssText='width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0;';
+  const bub = document.createElement('div'); bub.className = 'bubble';
+  bub.innerHTML = `<div class="sender">${escHtml(msg.username)}</div><div class="text">${escHtml(msg.message)}</div><div class="meta">${new Date(msg.createdAtMs).toLocaleTimeString()}</div>`;
+  wrap.appendChild(img); wrap.appendChild(bub);
+  el.appendChild(wrap);
+  el.scrollTop = el.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+function toast(title, body, kind='public') {
+  if (!toastStack) return;
+  const el = document.createElement('div');
+  el.className = 'toast ' + kind;
+  el.innerHTML = `<div class="t-title">${escHtml(title)}</div><div class="t-body">${escHtml(body)}</div>`;
+  toastStack.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ═══════════════════════════════════════════════════
+// STATE UPDATE (no page reload!)
+// ═══════════════════════════════════════════════════
+function onStateUpdate(st) {
+  serverSkew = (st.serverNowMs || Date.now()) - Date.now();
+  phaseEndsAtMs = st.phaseEndsAtMs || 0;
+
+  if (st.dayNumber && dayChip) dayChip.textContent = 'Jour ' + st.dayNumber;
+
+  // Only reload if phase changed AND we actually need new server data
+  // (wolf list, seer targets, witch victims — these need Thymeleaf)
+  if (st.phase && st.phase !== currentPhase) {
+    const prev = currentPhase;
+    currentPhase = st.phase;
+    applyPhaseUI(st.phase);
+    updateMusic();
+
+    // Show phase change toast
+    const p = PHASES[st.phase] || {};
+    toast(p.icon + ' ' + (p.title || st.phase), p.sub || '', isNight(st.phase) ? 'private' : 'public');
+
+    // Reload page to get fresh action panel from Thymeleaf
+    setTimeout(() => window.location.reload(), 800);
   }
 
-  function play(id, vol=0.7) {
-    const a = document.getElementById(id);
-    if (!a) return;
-    try {
-      const node = a.cloneNode(true);
-      node.volume = Math.max(0, Math.min(1, vol));
-      const p = node.play();
-      if (p && typeof p.catch === "function") p.catch(()=>{});
-    } catch(e) {}
+  // Update vote bar if in vote phase
+  if (st.phase === 'DAY_VOTE') {
+    const fill = document.getElementById('voteBarFill');
+    const vcEl = document.getElementById('voteCounter');
+    const acEl = document.getElementById('aliveCounter');
+    if (fill && st.voteCount != null && st.aliveCount > 0) {
+      fill.style.width = Math.round((st.voteCount / st.aliveCount) * 100) + '%';
+    }
+    if (vcEl && st.voteCount != null) vcEl.textContent = st.voteCount;
+    if (acEl && st.aliveCount != null) acEl.textContent = st.aliveCount;
   }
 
-  window.addEventListener("DOMContentLoaded", () => {
-    // Animated background assets
-    const bgDay = q("#bgDay");
-    const bgNight = q("#bgNight");
-
-    if (bgDay && !q(".bgSun", bgDay)) {
-      const sun = document.createElement("img");
-      sun.className = "bgSun";
-      sun.alt = "";
-      sun.src = ICONS.sun;
-      bgDay.appendChild(sun);
-
-      ["b1","b2","b3"].forEach((cls) => {
-        const bird = document.createElement("img");
-        bird.className = "bird " + cls;
-        bird.alt = "";
-        bird.src = ICONS.bird;
-        bgDay.appendChild(bird);
-      });
-    }
-
-    if (bgNight && !q(".bgMoon", bgNight)) {
-      const moon = document.createElement("img");
-      moon.className = "bgMoon";
-      moon.alt = "";
-      moon.src = ICONS.moon;
-      bgNight.appendChild(moon);
-
-      const stars = document.createElement("div");
-      stars.className = "stars";
-      bgNight.appendChild(stars);
-    }
-
-    // Phase + theme
-    const phase = (document.body.dataset.phase || "").toUpperCase();
-    const isNight = phase.startsWith("NIGHT");
-    document.body.classList.toggle("is-night", isNight);
-    document.body.classList.toggle("is-day", !isNight);
-
-    // Role showcase
-    const role = (document.body.dataset.role || "").toUpperCase();
-    const roleImg = q("#roleImg");
-    const roleNameText = q("#roleNameText");
-    const roleDesc = q("#roleDesc");
-    const roleMap = {
-      VILLAGER: { icon: ICONS.village, name: "Villageois", desc: "Discutez, observez, et votez intelligemment. Votre force: la logique collective." },
-      WOLF: { icon: ICONS.wolf, name: "Loup", desc: "La nuit, choisissez une victime. Le jour, bluffez pour survivre." },
-      SEER: { icon: ICONS.eye, name: "Voyante", desc: "Chaque nuit, découvrez l'alignement d'un joueur. Partagez l'info avec prudence." },
-      WITCH: { icon: ICONS.flask, name: "Sorcière", desc: "Sauvez ou éliminez (une fois chacun). Le bon timing change tout." },
-    };
-    if (roleMap[role]) {
-      if (roleImg) roleImg.src = roleMap[role].icon;
-      if (roleNameText) roleNameText.textContent = roleMap[role].name;
-      if (roleDesc) roleDesc.textContent = roleMap[role].desc;
-    }
-
-    // Phase banner icon
-    const bannerIcon = q("#phaseBannerIcon");
-    if (bannerIcon) {
-      const phaseIcons = {
-        NIGHT_WOLVES: "🐺",
-        NIGHT_SEER: "🔮",
-        NIGHT_WITCH: "🧙‍♀️",
-        DAY_CHAT: "💬",
-        DAY_VOTE: "🗳️",
-        FINISHED: "🏁"
-      };
-      bannerIcon.textContent = phaseIcons[phase] || (isNight ? "🌙" : "☀️");
-    }
-// Desktop sidebars (only on wide screens)
-const isWide = window.matchMedia("(min-width: 1100px)").matches;
-
-if (isWide) {
-  // Left sidebar: players list
-  const playersGrid = document.querySelector(".playersGrid");
-  const playersCard = playersGrid ? playersGrid.closest(".card") : null;
-  if (playersCard) {
-    const left = document.createElement("div");
-    left.id = "playersSidebar";
-    left.appendChild(playersCard);
-    document.body.appendChild(left);
-    document.body.classList.add("hasPlayersSidebar");
-  }
-
-  // Right sidebar: events + chat stacked
-  const eventsElMoved = document.getElementById("events");
-  const chatElMoved = document.getElementById("chat");
-  const eventsCard = eventsElMoved ? eventsElMoved.closest(".card") : null;
-  const chatCard = chatElMoved ? chatElMoved.closest(".card") : null;
-
-  if (eventsCard || chatCard) {
-    const right = document.createElement("div");
-    right.id = "rightSidebar";
-    if (eventsCard) right.appendChild(eventsCard);
-    if (chatCard && chatCard !== eventsCard) right.appendChild(chatCard);
-    document.body.appendChild(right);
-    document.body.classList.add("hasRightSidebar");
+  if (st.status === 'FINISHED') {
+    setTimeout(() => window.location.reload(), 1200);
   }
 }
 
-// Events -> top toast
-if (eventsEl) {
-      let lastSnapshot = eventsEl.innerText || "";
-      const obs = new MutationObserver(() => {
-        const now = eventsEl.innerText || "";
-        if (now === lastSnapshot) return;
-        lastSnapshot = now;
+// ═══════════════════════════════════════════════════
+// WS STATUS
+// ═══════════════════════════════════════════════════
+function setWsOk(ok) {
+  if (!wsChip) return;
+  if (ok) {
+    wsChip.textContent = '🟢 Live';
+    wsChip.style.borderColor = 'rgba(16,185,129,.4)';
+    wsChip.style.color = '#6ee7b7';
+  } else {
+    wsChip.textContent = '🔴 Reconnexion...';
+    wsChip.style.borderColor = 'rgba(239,68,68,.4)';
+    wsChip.style.color = '#fca5a5';
+  }
+}
 
-        const lines = now.split(/\n+/).map(s => s.trim()).filter(Boolean);
-        const last = lines[lines.length - 1];
-        if (!last) return;
+// ═══════════════════════════════════════════════════
+// HTTP FALLBACK
+// ═══════════════════════════════════════════════════
+let fallbackTimer = null;
+function startFallback() {
+  if (fallbackTimer) return;
+  setWsOk(false);
+  fallbackTimer = setInterval(() => {
+    fetch('/api/game/' + roomCode + '/state', {cache:'no-store'})
+      .then(r => r.ok ? r.json() : null).then(st => st && onStateUpdate(st)).catch(()=>{});
+    fetch('/api/game/' + roomCode + '/events?afterId=' + lastEventId, {cache:'no-store'})
+      .then(r => r.ok ? r.json() : []).then(evs => evs.forEach(appendEvent)).catch(()=>{});
+    const ce = document.getElementById('chat') || document.getElementById('chat2');
+    if (ce) {
+      fetch('/api/game/' + roomCode + '/chat?afterId=' + lastChatId, {cache:'no-store'})
+        .then(r => r.ok ? r.json() : []).then(msgs => msgs.forEach(appendChat)).catch(()=>{});
+    }
+  }, 3000);
+}
+function stopFallback() {
+  if (fallbackTimer) { clearInterval(fallbackTimer); fallbackTimer = null; }
+}
 
-        const isPrivate = last.startsWith("🔒");
-        toast({
-          title: isPrivate ? "Action (privée)" : (isNight ? "Nuit" : "Jour"),
-          body: isPrivate ? last.replace(/^🔒\s*/,"") : last,
-          kind: isPrivate ? "private" : "public",
-          mood: isNight ? "night" : "day"
+// ═══════════════════════════════════════════════════
+// INITIAL HTTP LOAD
+// ═══════════════════════════════════════════════════
+fetch('/api/game/' + roomCode + '/events?afterId=0', {cache:'no-store'})
+  .then(r => r.ok ? r.json() : []).then(evs => evs.forEach(appendEvent)).catch(()=>{});
+const chatBox = document.getElementById('chat') || document.getElementById('chat2');
+if (chatBox) {
+  fetch('/api/game/' + roomCode + '/chat?afterId=0', {cache:'no-store'})
+    .then(r => r.ok ? r.json() : []).then(msgs => msgs.forEach(appendChat)).catch(()=>{});
+}
+
+// ═══════════════════════════════════════════════════
+// WEBSOCKET (STOMP)
+// ═══════════════════════════════════════════════════
+setTimeout(() => {
+  if (typeof StompJs === 'undefined' || typeof SockJS === 'undefined') {
+    startFallback(); return;
+  }
+  const client = new StompJs.Client({
+    webSocketFactory: () => new SockJS('/ws'),
+    reconnectDelay: 5000,
+    debug: () => {},
+    onConnect() {
+      setWsOk(true);
+      stopFallback();
+
+      client.subscribe('/topic/game/' + roomCode + '/state', f => {
+        try { onStateUpdate(JSON.parse(f.body)); } catch(e){}
+      });
+      client.subscribe('/topic/game/' + roomCode + '/events', f => {
+        try { appendEvent(JSON.parse(f.body)); } catch(e){}
+      });
+      client.subscribe('/topic/game/' + roomCode + '/chat', f => {
+        try { appendChat(JSON.parse(f.body)); } catch(e){}
+      });
+      if (myUserId) {
+        client.subscribe('/topic/private/' + myUserId, f => {
+          try { const ev = JSON.parse(f.body); ev.isPrivate = true; appendEvent(ev); } catch(e){}
         });
-      });
-      obs.observe(eventsEl, { childList: true, subtree: true, characterData: true });
-    }
-
-    // Role-specific submit SFX + instant feedback toast
-    function choiceLabelFromForm(form) {
-      // prefer selected option text
-      const sel = q("select", form);
-      if (sel && sel.selectedOptions && sel.selectedOptions[0]) {
-        return sel.selectedOptions[0].textContent.trim();
       }
-      const checked = q("input[type=radio]:checked", form);
-      if (checked) {
-        const label = checked.closest("label");
-        const name = label ? q("b", label) : null;
-        return (name ? name.textContent.trim() : checked.value);
-      }
-      return "";
-    }
-
-    function wireForm(actionContains, sfxId, label, kind="private") {
-      const forms = qq(`form[action*="${actionContains}"]`);
-      forms.forEach((form) => {
-        form.addEventListener("submit", () => {
-          play(sfxId, 0.85);
-          const choice = choiceLabelFromForm(form);
-          toast({
-            title: label,
-            body: choice ? `Choix: ${choice}` : "Action envoyée.",
-            kind,
-            mood: isNight ? "night" : "day"
-          });
-        });
-      });
-    }
-
-    wireForm("/wolves/act", "audioWolfSfx", "Loups — attaque");
-    wireForm("/seer/act", "audioSeerSfx", "Voyante — vision");
-    wireForm("/witch/act", "audioWitchSfx", "Sorcière — potion");
-    wireForm("/vote", "audioVoteSfx", "Vote enregistré", "public");
-    wireForm("/chat", "audioChatSfx", "Message envoyé", "public");
-
-    // SFX toggle button (separate from ambience toggle)
-    const sfxEnabledKey = "ww_sfx";
-    let sfxEnabled = localStorage.getItem(sfxEnabledKey);
-    if (sfxEnabled === null) sfxEnabled = "1";
-
-    const controlsRow = q(".topbar .row.gap");
-    if (controlsRow && !q("#sfxToggle")) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "btn tiny secondary";
-      btn.id = "sfxToggle";
-      const paint = () => btn.textContent = (sfxEnabled === "1") ? "✨ SFX" : "🔇 SFX";
-      paint();
-
-      btn.addEventListener("click", () => {
-        sfxEnabled = (sfxEnabled === "1") ? "0" : "1";
-        localStorage.setItem(sfxEnabledKey, sfxEnabled);
-        paint();
-        play("audioToggle", 0.55);
-      });
-      controlsRow.appendChild(btn);
-
-      // unlock audio on first interaction (mobile/iOS)
-      const unlock = () => {
-        if (localStorage.getItem(sfxEnabledKey) === "1") play("audioClickSfx", 0.25);
-        window.removeEventListener("pointerdown", unlock);
-        window.removeEventListener("keydown", unlock);
-      };
-      window.addEventListener("pointerdown", unlock);
-      window.addEventListener("keydown", unlock);
-    }
-
-    // Hover/click micro-SFX (very light)
-    qq("button.btn, a.link, label.pick").forEach((el) => {
-      el.addEventListener("pointerenter", () => {
-        if (localStorage.getItem(sfxEnabledKey) === "1") play("audioHover", 0.15);
-      });
-      el.addEventListener("pointerdown", () => {
-        if (localStorage.getItem(sfxEnabledKey) === "1") play("audioClickSfx", 0.20);
-      });
-    });
-
-    // Day/Night transition cues (based on last phase)
-    const lastPhaseKey = "ww_last_phase";
-    const lastPhase = (localStorage.getItem(lastPhaseKey) || "").toUpperCase();
-    if (lastPhase && lastPhase !== phase) {
-      if (isNight) play("audioNightCue", 0.55);
-      else play("audioMorningCue", 0.55);
-    }
-    localStorage.setItem(lastPhaseKey, phase);
+    },
+    onDisconnect() { setWsOk(false); startFallback(); },
+    onStompError() { setWsOk(false); startFallback(); }
   });
-})();
+  client.activate();
+}, 200);
+
+// Safety: start fallback if WS hasn't connected in 3s
+setTimeout(() => { if (!fallbackTimer && wsChip && wsChip.textContent !== '🟢 Live') startFallback(); }, 3000);
 </script>
 
 </body>
