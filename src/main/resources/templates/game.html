@@ -468,17 +468,35 @@ body.is-day #atmo {
 
 /* Responsive: stack vertically on small screens */
 @media (max-width: 900px) {
+  html, body { height: auto; overflow-y: auto; }
   #shell {
     grid-template-columns: 1fr;
-    grid-template-rows: 52px auto 1fr;
+    grid-template-rows: auto auto 1fr;
     grid-template-areas: "topbar" "left" "center";
-    overflow-y: auto;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
   }
-  html, body { overflow: auto; }
-  #left { max-height: 180px; border-right: none; border-bottom: 1px solid var(--border); }
+  #topbar { flex-wrap: wrap; padding: 8px 10px; gap: 6px 8px; }
+  #left { max-height: 240px; border-right: none; border-bottom: 1px solid var(--border); }
   #playersList { flex-direction: row; flex-wrap: wrap; overflow-x: auto; overflow-y: hidden; }
   #center { overflow: visible; }
   #actionArea { overflow: visible; }
+  #histPanel { width: min(420px, 92vw); }
+  .toast { max-width: calc(100vw - 24px); }
+}
+/* Small phones: shrink the top bar so it wraps neatly */
+@media (max-width: 560px) {
+  #topbar { padding: 6px 8px; gap: 5px 6px; }
+  #topbar .logo { font-size: 13px; letter-spacing: .02em; }
+  #topbar .chip { font-size: 11px; padding: 2px 8px; }
+  #topbar button { font-size: 10px; padding: 4px 8px; }
+  #phaseHero { padding: 12px 12px 10px; gap: 10px; }
+  #phaseEmoji { font-size: 28px; }
+  #phaseTitle { font-size: 17px; }
+  #phaseHero .timer-big { font-size: 22px; }
+  #actionArea { padding: 12px; }
+  #histPanel { width: 100vw; }
 }
 </style>
 </head>

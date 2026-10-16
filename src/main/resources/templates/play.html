@@ -440,6 +440,15 @@
             .card-header { font-size: 0.98rem; }
         }
 
+        /* Mobile: allow scrolling and let the two cards stack naturally */
+        @media (max-width: 768px) {
+            html, body { height: auto; }
+            body { height: auto; min-height: 100dvh; overflow-y: auto; }
+            .play-main { overflow: visible; }
+            .page-title { font-size: 1.9rem; }
+            .card:hover { transform: none; }
+        }
+
         .navbar-custom {
             background: rgba(10, 14, 39, 0.95);
             backdrop-filter: blur(10px);

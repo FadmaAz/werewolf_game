@@ -204,6 +204,23 @@
             .mb-4 { margin-bottom: 0.7rem !important; }
             .content-wrapper { gap: 0.4rem; }
         }
+
+        /* Mobile: allow the page to scroll instead of clipping content */
+        @media (max-width: 640px) {
+            html, body { height: auto; }
+            body { overflow-y: auto; }
+            .content-wrapper {
+                height: auto;
+                min-height: 100dvh;
+                overflow: visible;
+                justify-content: flex-start;
+                padding: 1.5rem 1rem;
+                gap: 1rem;
+            }
+            .card-join { padding: 1.25rem 1rem; }
+            .avatar-grid { gap: 0.5rem; }
+            .hero-title { font-size: clamp(2rem, 11vw, 3rem); }
+        }
     </style>
 </head>
 <body>

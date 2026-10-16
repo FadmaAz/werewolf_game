@@ -861,6 +861,17 @@
             .info-card .info-row .info-status { order: 3; flex: 1 1 100%; }
         }
 
+        /* Mobile: allow scrolling and adapt the room header/player cards */
+        @media (max-width: 768px) {
+            html, body { height: auto; }
+            body { height: auto; min-height: 100dvh; overflow-y: auto; }
+            .room-main { overflow: visible; }
+            .room-code { font-size: 1.2rem; letter-spacing: 3px; padding: 0.6rem 1.1rem; }
+            .copy-btn { width: 42px; height: 40px; }
+            .players-grid.compact .player-card { flex: 1 1 140px; width: auto; max-width: 100%; }
+            .avatar-big { width: 64px; height: 64px; }
+        }
+
         /* Joueurs */
         .players-grid.compact {
             display: flex;
