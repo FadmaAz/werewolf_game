@@ -713,21 +713,21 @@ body.is-day #atmo {
 </div>
 
 <!-- Audio -->
-<audio id="audioNight" loop preload="auto">
+<audio id="audioNight" loop preload="none">
   <source th:src="@{/audio/wolves.ogg}" type="audio/ogg"/>
   <source th:src="@{/audio/night.wav}" type="audio/wav"/>
 </audio>
-<audio id="audioDay" loop preload="auto">
+<audio id="audioDay" loop preload="none">
   <source th:src="@{/audio/birds.ogg}" type="audio/ogg"/>
   <source th:src="@{/audio/day.wav}" type="audio/wav"/>
 </audio>
-<audio id="audioClick" preload="auto">
+<audio id="audioClick" preload="none">
   <source src="https://gamesounds.xyz/Kenney%27s%20Sound%20Pack/UI%20Audio/click2.ogg" type="audio/ogg"/>
 </audio>
-<audio id="audioMorningCue" preload="auto">
+<audio id="audioMorningCue" preload="none">
   <source th:src="@{/audio/birds.ogg}" type="audio/ogg"/>
 </audio>
-<audio id="audioNightCue" preload="auto">
+<audio id="audioNightCue" preload="none">
   <source th:src="@{/audio/wolves.ogg}" type="audio/ogg"/>
 </audio>
 
